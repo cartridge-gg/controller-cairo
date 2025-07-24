@@ -6,6 +6,8 @@ mod src5_component {
     use controller::introspection::interface::{ISRC5, ISRC5Legacy};
     use controller::introspection::interface::{SRC5_INTERFACE_ID, SRC5_INTERFACE_ID_OLD};
     use controller::outside_execution::interface::{ERC165_OUTSIDE_EXECUTION_INTERFACE_ID_REV_2};
+    use controller::delegate_account::interface::SRC5_DELEGATE_ACCOUNT_INTERFACE_ID;
+    use controller::external_owners::interface::SRC5_EXTERNAL_OWNERS_INTERFACE_ID;
 
     #[storage]
     struct Storage {}
@@ -28,6 +30,10 @@ mod src5_component {
             } else if interface_id == SRC5_ACCOUNT_INTERFACE_ID_OLD_1 {
                 true
             } else if interface_id == SRC5_ACCOUNT_INTERFACE_ID_OLD_2 {
+                true
+            } else if interface_id == SRC5_DELEGATE_ACCOUNT_INTERFACE_ID {
+                true
+            } else if interface_id == SRC5_EXTERNAL_OWNERS_INTERFACE_ID {
                 true
             } else {
                 false

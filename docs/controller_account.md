@@ -1,8 +1,8 @@
-# Argent Account
+# Controller Account
 
 ## High-Level Specification
 
-The Argent account is a custom multisig (1-of-1, 2-of-2 or 2-of-3) tailored for individuals.
+The Controller account is a custom multisig (1-of-1, 2-of-2 or 2-of-3) tailored for individuals.
 
 The primary key called the `owner` is typically stored on the user's device. A second key called the `guardian` acts both as a co-validator for typical operations of the wallet, and as the trusted actor that can recover the wallet in case the `owner` key is lost or compromised. In a typical setting the `guardian` key is managed by an off-chain service to enable fraud monitoring (e.g. trusted contacts, daily limits, etc) and recovery.
 
@@ -46,7 +46,7 @@ This account restricts the guardian role to only StarknetSigner. Note that the g
 
 ## Signature format
 
-The information available in [Signatures](./signers_and_signatures.md#Signatures) is also applicable for the argent account.
+The information available in [Signatures](./signers_and_signatures.md#Signatures) is also applicable for the controller account.
 
 Additionally, this account also supports providing signatures in a concise way when al signers involved are StarknetSigners
 

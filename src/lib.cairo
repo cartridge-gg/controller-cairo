@@ -81,3 +81,18 @@ mod offchain_message {
     mod interface;
     mod precalculated_hashing;
 }
+
+mod delegate_account {
+    mod delegate_account;
+    mod interface;
+}
+
+mod external_owners {
+    mod external_owners;
+    mod interface;
+}
+
+mod multiple_owners {
+    mod multiple_owners;
+    mod interface;
+}

@@ -1,4 +1,4 @@
-# Argent Account Upgrade
+# Controller Account Upgrade
 
 This documents covers the upgrade process starting with version 0.2.3
 
