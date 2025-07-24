@@ -2,18 +2,18 @@
 /// adding or removing signers, changing the threshold, etc
 #[starknet::component]
 mod multisig_component {
-    use argent::multisig::interface::{IArgentMultisig, IArgentMultisigInternal};
-    use argent::signer::{
+    use controller::multisig::interface::{IControllerMultisig, IControllerMultisigInternal};
+    use controller::signer::{
         signer_signature::{Signer, SignerTrait, SignerSignature, SignerSignatureTrait, SignerSpanTrait},
     };
-    use argent::signer_storage::{
+    use controller::signer_storage::{
         interface::ISignerList,
         signer_list::{
             signer_list_component,
             signer_list_component::{OwnerAddedGuid, OwnerRemovedGuid, SignerLinked, SignerListInternalImpl}
         }
     };
-    use argent::utils::{transaction_version::is_estimate_transaction, asserts::assert_only_self};
+    use controller::utils::{transaction_version::is_estimate_transaction, asserts::assert_only_self};
 
     /// Too many owners could make the multisig unable to process transactions if we reach a limit
     const MAX_SIGNERS_COUNT: usize = 32;
@@ -42,10 +42,10 @@ mod multisig_component {
         +HasComponent<TContractState>,
         impl SignerList: signer_list_component::HasComponent<TContractState>,
         +Drop<TContractState>
-    > of IArgentMultisig<ComponentState<TContractState>> {
+    > of IControllerMultisig<ComponentState<TContractState>> {
         fn change_threshold(ref self: ComponentState<TContractState>, new_threshold: usize) {
             assert_only_self();
-            assert(new_threshold != self.threshold.read(), 'argent/same-threshold');
+            assert(new_threshold != self.threshold.read(), 'ctrl/same-threshold');
             let new_signers_count = self.get_contract().get_signers_len();
 
             self.assert_valid_threshold_and_signers_count(new_threshold, new_signers_count);
@@ -137,7 +137,7 @@ mod multisig_component {
             self: @ComponentState<TContractState>, hash: felt252, signer_signature: SignerSignature
         ) -> bool {
             let is_signer = self.get_contract().is_signer_in_list(signer_signature.signer().into_guid());
-            assert(is_signer, 'argent/not-a-signer');
+            assert(is_signer, 'ctrl/not-a-signer');
             signer_signature.is_valid_signature(hash)
         }
     }
@@ -148,9 +148,9 @@ mod multisig_component {
         +HasComponent<TContractState>,
         impl SignerList: signer_list_component::HasComponent<TContractState>,
         +Drop<TContractState>
-    > of IArgentMultisigInternal<ComponentState<TContractState>> {
+    > of IControllerMultisigInternal<ComponentState<TContractState>> {
         fn initialize(ref self: ComponentState<TContractState>, threshold: usize, mut signers: Array<Signer>) {
-            assert(self.threshold.read() == 0, 'argent/already-initialized');
+            assert(self.threshold.read() == 0, 'ctrl/already-initialized');
 
             let new_signers_count = signers.len();
             self.assert_valid_threshold_and_signers_count(threshold, new_signers_count);
@@ -173,10 +173,10 @@ mod multisig_component {
         fn assert_valid_threshold_and_signers_count(
             self: @ComponentState<TContractState>, threshold: usize, signers_len: usize
         ) {
-            assert(threshold != 0, 'argent/invalid-threshold');
-            assert(signers_len != 0, 'argent/invalid-signers-len');
-            assert(signers_len <= MAX_SIGNERS_COUNT, 'argent/invalid-signers-len');
-            assert(threshold <= signers_len, 'argent/bad-threshold');
+            assert(threshold != 0, 'ctrl/invalid-threshold');
+            assert(signers_len != 0, 'ctrl/invalid-signers-len');
+            assert(signers_len <= MAX_SIGNERS_COUNT, 'ctrl/invalid-signers-len');
+            assert(threshold <= signers_len, 'ctrl/bad-threshold');
         }
 
         fn assert_valid_storage(self: @ComponentState<TContractState>) {
@@ -189,7 +189,7 @@ mod multisig_component {
             threshold: u32,
             mut signer_signatures: Array<SignerSignature>
         ) -> bool {
-            assert(signer_signatures.len() == threshold, 'argent/signature-invalid-length');
+            assert(signer_signatures.len() == threshold, 'ctrl/signature-invalid-length');
             let mut last_signer: u256 = 0;
             loop {
                 let signer_sig = match signer_signatures.pop_front() {
@@ -197,9 +197,9 @@ mod multisig_component {
                     Option::None => { break true; }
                 };
                 let signer_guid = signer_sig.signer().into_guid();
-                assert(self.is_signer_guid(signer_guid), 'argent/not-a-signer');
+                assert(self.is_signer_guid(signer_guid), 'ctrl/not-a-signer');
                 let signer_uint: u256 = signer_guid.into();
-                assert(signer_uint > last_signer, 'argent/signatures-not-sorted');
+                assert(signer_uint > last_signer, 'ctrl/signatures-not-sorted');
                 last_signer = signer_uint;
                 if !signer_sig.is_valid_signature(hash) && !is_estimate_transaction() {
                     break false;

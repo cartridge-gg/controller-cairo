@@ -1,11 +1,11 @@
-use argent::presets::argent_account::ArgentAccount;
-use argent::signer::signer_signature::{Signer, StarknetSigner, starknet_signer_from_pubkey};
+use controller::presets::controller_account::ControllerAccount;
+use controller::signer::signer_signature::{Signer, StarknetSigner, starknet_signer_from_pubkey};
 use starknet::VALIDATED;
 use super::setup::{
     utils::{to_starknet_signatures, to_starknet_signer_signatures},
     constants::{GUARDIAN, OWNER, GUARDIAN_BACKUP, WRONG_OWNER, WRONG_GUARDIAN, tx_hash},
     account_test_setup::{
-        ITestArgentAccountDispatcher, ITestArgentAccountDispatcherTrait, initialize_account,
+        ITestControllerAccountDispatcher, ITestControllerAccountDispatcherTrait, initialize_account,
         initialize_account_without_guardian, initialize_account_with
     }
 };
@@ -103,7 +103,7 @@ fn invalid_owner_with_invalid_guardian() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-signature-format',))]
+#[should_panic(expected: ('ctrl/invalid-signature-format',))]
 fn invalid_empty_signature_without_guardian() {
     let account = initialize_account_without_guardian();
     let signatures = array![];
@@ -111,7 +111,7 @@ fn invalid_empty_signature_without_guardian() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-signature-length',))]
+#[should_panic(expected: ('ctrl/invalid-signature-length',))]
 fn invalid_signature_length_without_guardian() {
     let account = initialize_account_without_guardian();
     let signatures = to_starknet_signatures(array![OWNER(), GUARDIAN_BACKUP()]);
@@ -119,7 +119,7 @@ fn invalid_signature_length_without_guardian() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-signature-format',))]
+#[should_panic(expected: ('ctrl/invalid-signature-format',))]
 fn invalid_empty_signature_with_guardian() {
     let account = initialize_account();
     let signatures = array![];
@@ -127,7 +127,7 @@ fn invalid_empty_signature_with_guardian() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-signature-length',))]
+#[should_panic(expected: ('ctrl/invalid-signature-length',))]
 fn invalid_signature_length_with_guardian() {
     let account = initialize_account();
     let signatures = to_starknet_signatures(array![OWNER()]);
@@ -135,7 +135,7 @@ fn invalid_signature_length_with_guardian() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-signature-length',))]
+#[should_panic(expected: ('ctrl/invalid-signature-length',))]
 fn invalid_signature_length_with_owner_and_guardian_and_backup() {
     let account = initialize_account_with(OWNER().pubkey, 1);
     let guardian_backup = starknet_signer_from_pubkey(GUARDIAN_BACKUP().pubkey);

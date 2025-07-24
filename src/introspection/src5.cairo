@@ -1,11 +1,11 @@
 #[starknet::component]
 mod src5_component {
-    use argent::account::interface::{
+    use controller::account::interface::{
         SRC5_ACCOUNT_INTERFACE_ID, SRC5_ACCOUNT_INTERFACE_ID_OLD_1, SRC5_ACCOUNT_INTERFACE_ID_OLD_2
     };
-    use argent::introspection::interface::{ISRC5, ISRC5Legacy};
-    use argent::introspection::interface::{SRC5_INTERFACE_ID, SRC5_INTERFACE_ID_OLD};
-    use argent::outside_execution::interface::{ERC165_OUTSIDE_EXECUTION_INTERFACE_ID_REV_2};
+    use controller::introspection::interface::{ISRC5, ISRC5Legacy};
+    use controller::introspection::interface::{SRC5_INTERFACE_ID, SRC5_INTERFACE_ID_OLD};
+    use controller::outside_execution::interface::{ERC165_OUTSIDE_EXECUTION_INTERFACE_ID_REV_2};
 
     #[storage]
     struct Storage {}

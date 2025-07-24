@@ -1,7 +1,7 @@
-use argent::mocks::signer_list_mocks::SignerListMock;
-use argent::signer::signer_signature::{Signer, StarknetSigner, SignerTrait, starknet_signer_from_pubkey};
-use argent::signer_storage::interface::ISignerList;
-use argent::signer_storage::signer_list::signer_list_component;
+use controller::mocks::signer_list_mocks::SignerListMock;
+use controller::signer::signer_signature::{Signer, StarknetSigner, SignerTrait, starknet_signer_from_pubkey};
+use controller::signer_storage::interface::ISignerList;
+use controller::signer_storage::signer_list::signer_list_component;
 use super::setup::constants::{MULTISIG_OWNER};
 
 type ComponentState = signer_list_component::ComponentState<SignerListMock::ContractState>;
@@ -44,7 +44,7 @@ fn test_add_2_signers_after_one() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/already-a-signer',))]
+#[should_panic(expected: ('ctrl/already-a-signer',))]
 fn test_add_duplicate_signer() {
     let mut component = COMPONENT_STATE();
     component
@@ -91,7 +91,7 @@ fn test_remove_last_signer() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/not-a-signer',))]
+#[should_panic(expected: ('ctrl/not-a-signer',))]
 fn test_remove_unknown_signer() {
     let mut component = COMPONENT_STATE();
     component.add_signers(array![MULTISIG_OWNER(1).pubkey, MULTISIG_OWNER(2).pubkey].span(), 0);
@@ -145,7 +145,7 @@ fn test_replace_last_signer() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/not-a-signer',))]
+#[should_panic(expected: ('ctrl/not-a-signer',))]
 fn test_replace_unknown_signer() {
     let mut component = COMPONENT_STATE();
     component.add_signers(array![MULTISIG_OWNER(1).pubkey].span(), 0);
@@ -153,7 +153,7 @@ fn test_replace_unknown_signer() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/already-a-signer',))]
+#[should_panic(expected: ('ctrl/already-a-signer',))]
 fn test_replace_duplicate_signer() {
     let mut component = COMPONENT_STATE();
     component.add_signers(array![MULTISIG_OWNER(1).pubkey, MULTISIG_OWNER(2).pubkey].span(), 0);

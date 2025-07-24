@@ -15,7 +15,7 @@ impl StoreFelt252Array of Store<Array<felt252>> {
         let mut arr: Array<felt252> = ArrayTrait::new();
 
         // Read the stored array's length. If the length is superior to 255, the read will fail.
-        let len: u8 = Store::<u8>::read_at_offset(address_domain, base, offset).expect('argent/array-too-large');
+        let len: u8 = Store::<u8>::read_at_offset(address_domain, base, offset).expect('ctrl/array-too-large');
         offset += 1;
 
         // Sequentially read all stored elements and append them to the array.
@@ -34,8 +34,8 @@ impl StoreFelt252Array of Store<Array<felt252>> {
         address_domain: u32, base: StorageBaseAddress, mut offset: u8, mut value: Array<felt252>
     ) -> SyscallResult<()> {
         // Store the length of the array in the first storage slot.
-        let len: u8 = value.len().try_into().expect('argent/array-too-large');
-        Store::<u8>::write_at_offset(address_domain, base, offset, len).expect('argent/unwritable');
+        let len: u8 = value.len().try_into().expect('ctrl/array-too-large');
+        Store::<u8>::write_at_offset(address_domain, base, offset, len).expect('ctrl/unwritable');
         offset += 1;
 
         // Store the array elements sequentially

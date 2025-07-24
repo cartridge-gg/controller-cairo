@@ -1,9 +1,9 @@
-use argent::mocks::multisig_mocks::MultisigMock;
-use argent::multisig::interface::IArgentMultisig;
-use argent::multisig::interface::IArgentMultisigInternal;
-use argent::multisig::multisig::multisig_component;
-use argent::signer::{signer_signature::{Signer, StarknetSigner, starknet_signer_from_pubkey, SignerTrait}};
-use argent::signer_storage::signer_list::signer_list_component;
+use controller::mocks::multisig_mocks::MultisigMock;
+use controller::multisig::interface::IControllerMultisig;
+use controller::multisig::interface::IControllerMultisigInternal;
+use controller::multisig::multisig::multisig_component;
+use controller::signer::{signer_signature::{Signer, StarknetSigner, starknet_signer_from_pubkey, SignerTrait}};
+use controller::signer_storage::signer_list::signer_list_component;
 use snforge_std::{CheatSpan, cheat_caller_address, test_address};
 use super::setup::constants::{MULTISIG_OWNER};
 
@@ -44,28 +44,28 @@ fn test_initialize_3_signers() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-threshold',))]
+#[should_panic(expected: ('ctrl/invalid-threshold',))]
 fn test_initialize_threshold_zero() {
     let mut component = COMPONENT_STATE();
     component.initialize(0, array![SIGNER_1(), SIGNER_2(), SIGNER_3()]);
 }
 
 #[test]
-#[should_panic(expected: ('argent/bad-threshold',))]
+#[should_panic(expected: ('ctrl/bad-threshold',))]
 fn test_initialize_threshold_larger_then_signers() {
     let mut component = COMPONENT_STATE();
     component.initialize(7, array![SIGNER_1(), SIGNER_2(), SIGNER_3()]);
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-signers-len',))]
+#[should_panic(expected: ('ctrl/invalid-signers-len',))]
 fn test_initialize_no_signers() {
     let mut component = COMPONENT_STATE();
     component.initialize(1, array![]);
 }
 
 #[test]
-#[should_panic(expected: ('argent/already-a-signer',))]
+#[should_panic(expected: ('ctrl/already-a-signer',))]
 fn test_initialize_duplicate_signer() {
     let mut component = COMPONENT_STATE();
     component.initialize(1, array![SIGNER_1(), SIGNER_1(), SIGNER_2()]);
@@ -84,7 +84,7 @@ fn test_change_threshold() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/same-threshold',))]
+#[should_panic(expected: ('ctrl/same-threshold',))]
 fn test_change_threshold_same() {
     let mut component = COMPONENT_STATE();
     component.initialize(2, array![SIGNER_1(), SIGNER_2(), SIGNER_3()]);
@@ -121,7 +121,7 @@ fn test_add_2_signers_same_threshold() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/bad-threshold',))]
+#[should_panic(expected: ('ctrl/bad-threshold',))]
 fn test_add_1_signer_invalid_threshold() {
     cheat_caller_address(test_address(), test_address(), CheatSpan::Indefinite(()));
     let mut component = COMPONENT_STATE();
@@ -130,7 +130,7 @@ fn test_add_1_signer_invalid_threshold() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/already-a-signer',))]
+#[should_panic(expected: ('ctrl/already-a-signer',))]
 fn test_initialize_add_duplicate_signer() {
     cheat_caller_address(test_address(), test_address(), CheatSpan::Indefinite(()));
     let mut component = COMPONENT_STATE();
@@ -182,7 +182,7 @@ fn test_remove_2_signers() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/bad-threshold',))]
+#[should_panic(expected: ('ctrl/bad-threshold',))]
 fn test_remove_signer_invalid_threshold() {
     cheat_caller_address(test_address(), test_address(), CheatSpan::Indefinite(()));
     let mut component = COMPONENT_STATE();
@@ -191,7 +191,7 @@ fn test_remove_signer_invalid_threshold() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-signers-len',))]
+#[should_panic(expected: ('ctrl/invalid-signers-len',))]
 fn test_remove_all_signers() {
     cheat_caller_address(test_address(), test_address(), CheatSpan::Indefinite(()));
     let mut component = COMPONENT_STATE();
@@ -200,7 +200,7 @@ fn test_remove_all_signers() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/not-a-signer',))]
+#[should_panic(expected: ('ctrl/not-a-signer',))]
 fn test_remove_unknown_signer() {
     cheat_caller_address(test_address(), test_address(), CheatSpan::Indefinite(()));
     let mut component = COMPONENT_STATE();
@@ -233,7 +233,7 @@ fn test_replace_last_signer() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/not-a-signer',))]
+#[should_panic(expected: ('ctrl/not-a-signer',))]
 fn test_replace_unknown_signer() {
     cheat_caller_address(test_address(), test_address(), CheatSpan::Indefinite(()));
     let mut component = COMPONENT_STATE();
@@ -242,7 +242,7 @@ fn test_replace_unknown_signer() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/already-a-signer',))]
+#[should_panic(expected: ('ctrl/already-a-signer',))]
 fn test_replace_duplicate_signer() {
     cheat_caller_address(test_address(), test_address(), CheatSpan::Indefinite(()));
     let mut component = COMPONENT_STATE();

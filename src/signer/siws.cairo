@@ -1,11 +1,11 @@
 use alexandria_encoding::base58::Base58Encoder;
-use argent::signer::signer_signature::{SIWSSignature, Ed25519Signer};
-use argent::utils::array_ext::ArrayExtTrait;
-use argent::utils::bytes::{
+use controller::signer::signer_signature::{SIWSSignature, Ed25519Signer};
+use controller::utils::array_ext::ArrayExtTrait;
+use controller::utils::bytes::{
     ArrayU8Ext, ByteArrayExt, u256_to_byte_array, u256_to_u8s, u32s_to_byte_array,
     u32s_typed_to_u256,
 };
-use argent::utils::hashing::poseidon_2;
+use controller::utils::hashing::poseidon_2;
 use core::byte_array::{ByteArray, ByteArrayTrait};
 use core::hash::{HashStateExTrait, HashStateTrait};
 use core::serde::Serde;

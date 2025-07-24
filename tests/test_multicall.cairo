@@ -1,4 +1,4 @@
-use argent::utils::calls::execute_multicall;
+use controller::utils::calls::execute_multicall;
 use core::traits::TryInto;
 use snforge_std::{ContractClass, ContractClassTrait, DeclareResult, declare};
 use starknet::account::Call;
@@ -11,14 +11,14 @@ use starknet::account::Call;
 // do not yet support graceful failure in internal calls. If an inner call panics, the entire
 // transaction immediately reverts. This will change in the future,"
 // #[test]
-// #[should_panic(expected: ('argent/multicall-failed', 0, 'CONTRACT_NOT_DEPLOYED'))]
+// #[should_panic(expected: ('ctrl/multicall-failed', 0, 'CONTRACT_NOT_DEPLOYED'))]
 // fn execute_multicall_simple() {
 //     let call = Call { to: 42.try_into().unwrap(), selector: 43, calldata: array![].span() };
 //     execute_multicall(array![call].span());
 // }
 
 #[test]
-#[should_panic(expected: ('argent/multicall-failed', 2, 'test dapp reverted'))]
+#[should_panic(expected: ('ctrl/multicall-failed', 2, 'test dapp reverted'))]
 fn execute_multicall_at_one() {
     let declare_result = declare("MockDapp");
     let contract_class = match declare_result {
@@ -26,7 +26,7 @@ fn execute_multicall_at_one() {
             DeclareResult::Success(contract_class) => contract_class,
             DeclareResult::AlreadyDeclared(contract_class) => contract_class,
         },
-        Result::Err(_) => panic_with_felt252('err declaring ArgentAccount'),
+        Result::Err(_) => panic_with_felt252('err declaring ControllerAccount'),
     };
 
     let constructor = array![];

@@ -1,6 +1,6 @@
 /// @dev 🚨 This smart contract is a mock implementation and is not meant for actual deployment or use in any live environment. It is solely for testing, educational, or demonstration purposes. Please refrain from relying on the functionality of this contract for any production. 🚨
-use argent::account::interface::{IAccount, IArgentAccount, Version};
-use argent::signer::{
+use controller::account::interface::{IAccount, IControllerAccount, Version};
+use controller::signer::{
     signer_signature::{
         Signer, SignerStorageValue, SignerType, StarknetSigner, StarknetSignature, SignerTrait, SignerStorageTrait,
         SignerSignature, SignerSignatureTrait, starknet_signer_from_pubkey
@@ -8,18 +8,18 @@ use argent::signer::{
 };
 
 #[starknet::contract(account)]
-mod MockFutureArgentAccount {
-    use argent::account::interface::{IAccount, IArgentAccount, Version};
-    use argent::introspection::src5::src5_component;
+mod MockFutureControllerAccount {
+    use controller::account::interface::{IAccount, IControllerAccount, Version};
+    use controller::introspection::src5::src5_component;
 
-    use argent::signer::{
+    use controller::signer::{
         signer_signature::{
             Signer, SignerStorageValue, SignerType, StarknetSigner, StarknetSignature, SignerTrait, SignerStorageTrait,
             SignerSignature, SignerSignatureTrait, starknet_signer_from_pubkey
         }
     };
-    use argent::upgrade::{upgrade::upgrade_component, interface::{IUpgradableCallback, IUpgradableCallbackOld}};
-    use argent::utils::{
+    use controller::upgrade::{upgrade::upgrade_component, interface::{IUpgradableCallback, IUpgradableCallbackOld}};
+    use controller::utils::{
         asserts::{assert_no_self_call, assert_only_self}, calls::execute_multicall, serialization::full_deserialize,
     };
     use core::option::OptionTrait;
@@ -31,9 +31,9 @@ mod MockFutureArgentAccount {
         SyscallResultTrait, get_tx_info, get_execution_info, syscalls::storage_read_syscall,
         storage_access::{storage_address_from_base_and_offset, storage_base_address_from_felt252, storage_write_syscall}
     };
-    use super::{IFutureArgentUserAccount, IFutureArgentUserAccountDispatcher, IFutureArgentUserAccountDispatcherTrait};
+    use super::{IFutureControllerUserAccount, IFutureControllerUserAccountDispatcher, IFutureControllerUserAccountDispatcherTrait};
 
-    const NAME: felt252 = 'ArgentAccount';
+    const NAME: felt252 = 'ControllerAccount';
     const VERSION_MAJOR: u8 = 0;
     const VERSION_MINOR: u8 = 5;
     const VERSION_PATCH: u8 = 0;
@@ -70,10 +70,10 @@ mod MockFutureArgentAccount {
 
     #[constructor]
     fn constructor(ref self: ContractState, owner: Signer, guardian: Option<Signer>) {
-        assert(owner.signer_type() == SignerType::Starknet, 'argent/owner-must-be-starknet');
+        assert(owner.signer_type() == SignerType::Starknet, 'ctrl/owner-must-be-starknet');
         self._signer.write(owner.storage_value().stored_value);
         if let Option::Some(guardian) = guardian {
-            assert(guardian.signer_type() == SignerType::Starknet, 'argent/guardian-must-be-stark');
+            assert(guardian.signer_type() == SignerType::Starknet, 'ctrl/guardian-must-be-stark');
             self._guardian.write(guardian.storage_value().stored_value);
         };
     }
@@ -103,7 +103,7 @@ mod MockFutureArgentAccount {
     impl UpgradeableCallbackOldImpl of IUpgradableCallbackOld<ContractState> {
         // Called when coming from account < 0.4.0
         fn execute_after_upgrade(ref self: ContractState, data: Array<felt252>) -> Array<felt252> {
-            panic_with_felt252('argent/no-direct-upgrade');
+            panic_with_felt252('ctrl/no-direct-upgrade');
             array![]
         }
     }
@@ -113,21 +113,21 @@ mod MockFutureArgentAccount {
         // Called when coming from account 0.4.0+
         fn perform_upgrade(ref self: ContractState, new_implementation: ClassHash, data: Span<felt252>) {
             assert_only_self();
-            let current_version = IFutureArgentUserAccountDispatcher { contract_address: get_contract_address() }
+            let current_version = IFutureControllerUserAccountDispatcher { contract_address: get_contract_address() }
                 .get_version();
-            assert(current_version.major == 0 && current_version.minor == 4, 'argent/invalid-from-version');
+            assert(current_version.major == 0 && current_version.minor == 4, 'ctrl/invalid-from-version');
             self.upgrade.complete_upgrade(new_implementation);
             if data.is_empty() {
                 return;
             }
-            let calls: Array<Call> = full_deserialize(data).expect('argent/invalid-calls');
+            let calls: Array<Call> = full_deserialize(data).expect('ctrl/invalid-calls');
             assert_no_self_call(calls.span(), get_contract_address());
             execute_multicall(calls.span());
         }
     }
 
     #[abi(embed_v0)]
-    impl ArgentUserAccountImpl of super::IFutureArgentUserAccount<ContractState> {
+    impl ControllerUserAccountImpl of super::IFutureControllerUserAccount<ContractState> {
         fn __validate_deploy__(
             self: @ContractState,
             class_hash: felt252,
@@ -167,17 +167,17 @@ mod MockFutureArgentAccount {
         }
 
         fn parse_signature_array(self: @ContractState, mut signatures: Span<felt252>) -> Array<SignerSignature> {
-            full_deserialize(signatures).expect('argent/invalid-signature-format')
+            full_deserialize(signatures).expect('ctrl/invalid-signature-format')
         }
 
         fn is_valid_span_signature(
             self: @ContractState, hash: felt252, signer_signatures: Array<SignerSignature>
         ) -> bool {
             if self._guardian.read() == 0 {
-                assert(signer_signatures.len() == 1, 'argent/invalid-signature-length');
+                assert(signer_signatures.len() == 1, 'ctrl/invalid-signature-length');
                 self.is_valid_owner_signature(hash, *signer_signatures.at(0))
             } else {
-                assert(signer_signatures.len() == 2, 'argent/invalid-signature-length');
+                assert(signer_signatures.len() == 2, 'ctrl/invalid-signature-length');
                 self.is_valid_owner_signature(hash, *signer_signatures.at(0))
                     && self.is_valid_guardian_signature(hash, *signer_signatures.at(1))
             }
@@ -185,12 +185,12 @@ mod MockFutureArgentAccount {
 
         fn assert_valid_span_signature(self: @ContractState, hash: felt252, signer_signatures: Array<SignerSignature>) {
             if self._guardian.read() == 0 {
-                assert(signer_signatures.len() == 1, 'argent/invalid-signature-length');
-                assert(self.is_valid_owner_signature(hash, *signer_signatures.at(0)), 'argent/invalid-owner-sig');
+                assert(signer_signatures.len() == 1, 'ctrl/invalid-signature-length');
+                assert(self.is_valid_owner_signature(hash, *signer_signatures.at(0)), 'ctrl/invalid-owner-sig');
             } else {
-                assert(signer_signatures.len() == 2, 'argent/invalid-signature-length');
-                assert(self.is_valid_owner_signature(hash, *signer_signatures.at(0)), 'argent/invalid-owner-sig');
-                assert(self.is_valid_guardian_signature(hash, *signer_signatures.at(1)), 'argent/invalid-guardian-sig');
+                assert(signer_signatures.len() == 2, 'ctrl/invalid-signature-length');
+                assert(self.is_valid_owner_signature(hash, *signer_signatures.at(0)), 'ctrl/invalid-owner-sig');
+                assert(self.is_valid_guardian_signature(hash, *signer_signatures.at(1)), 'ctrl/invalid-guardian-sig');
             }
         }
 
@@ -211,7 +211,7 @@ mod MockFutureArgentAccount {
 }
 
 #[starknet::interface]
-trait IFutureArgentUserAccount<TContractState> {
+trait IFutureControllerUserAccount<TContractState> {
     fn __validate_deploy__(
         self: @TContractState,
         class_hash: felt252,

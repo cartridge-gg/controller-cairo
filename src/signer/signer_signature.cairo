@@ -1,8 +1,8 @@
-use argent::signer::eip191::is_valid_eip191_signature;
-use argent::signer::siws::is_valid_siws_signature;
-use argent::signer::webauthn::{WebauthnSignature, get_webauthn_hash, verify_authenticator_flags};
-use argent::utils::bytes::u256_to_u8s;
-use argent::utils::hashing::poseidon_2;
+use controller::signer::eip191::is_valid_eip191_signature;
+use controller::signer::siws::is_valid_siws_signature;
+use controller::signer::webauthn::{WebauthnSignature, get_webauthn_hash, verify_authenticator_flags};
+use controller::utils::bytes::u256_to_u8s;
+use controller::utils::hashing::poseidon_2;
 use core::traits::TryInto;
 use ecdsa::check_ecdsa_signature;
 use garaga::signatures::eddsa_25519::EdDSASignatureWithHint;
@@ -142,7 +142,7 @@ impl Secp256k1SignerSerde of Serde<Secp256k1Signer> {
     #[inline(always)]
     fn deserialize(ref serialized: Span<felt252>) -> Option<Secp256k1Signer> {
         let pubkey_hash = Serde::<EthAddress>::deserialize(ref serialized)?;
-        assert(pubkey_hash.address != 0, 'argent/zero-pubkey-hash');
+        assert(pubkey_hash.address != 0, 'ctrl/zero-pubkey-hash');
         Option::Some(Secp256k1Signer { pubkey_hash })
     }
 }
@@ -156,14 +156,14 @@ impl Eip191SignerSerde of Serde<Eip191Signer> {
     #[inline(always)]
     fn deserialize(ref serialized: Span<felt252>) -> Option<Eip191Signer> {
         let eth_address = Serde::<EthAddress>::deserialize(ref serialized)?;
-        assert(eth_address.address != 0, 'argent/zero-eth-EthAddress');
+        assert(eth_address.address != 0, 'ctrl/zero-eth-EthAddress');
         Option::Some(Eip191Signer { eth_address })
     }
 }
 
 #[inline(always)]
 fn starknet_signer_from_pubkey(pubkey: felt252) -> Signer {
-    Signer::Starknet(StarknetSigner { pubkey: pubkey.try_into().expect('argent/zero-pubkey') })
+    Signer::Starknet(StarknetSigner { pubkey: pubkey.try_into().expect('ctrl/zero-pubkey') })
 }
 
 #[generate_trait]
@@ -365,7 +365,7 @@ fn is_valid_starknet_signature(
 fn is_valid_secp256k1_signature(
     hash: u256, pubkey_hash: EthAddress, signature: Secp256Signature,
 ) -> bool {
-    assert(signature.s <= SECP_256_K1_HALF, 'argent/malleable-signature');
+    assert(signature.s <= SECP_256_K1_HALF, 'ctrl/malleable-signature');
     is_eth_signature_valid(hash, signature, pubkey_hash).is_ok()
 }
 
@@ -374,12 +374,12 @@ fn is_valid_secp256r1_signature(
     hash: u256, signer: Secp256r1Signer, signature: Secp256Signature,
 ) -> bool {
     // `recover_public_key` accepts invalid values for r and s, so we need to check them first
-    assert(is_signature_entry_valid::<Secp256r1Point>(signature.r), 'argent/invalid-r-value');
-    assert(is_signature_entry_valid::<Secp256r1Point>(signature.s), 'argent/invalid-s-value');
-    assert(signature.s <= SECP_256_R1_HALF, 'argent/malleable-signature');
+    assert(is_signature_entry_valid::<Secp256r1Point>(signature.r), 'ctrl/invalid-r-value');
+    assert(is_signature_entry_valid::<Secp256r1Point>(signature.s), 'ctrl/invalid-s-value');
+    assert(signature.s <= SECP_256_R1_HALF, 'ctrl/malleable-signature');
     let recovered = recover_public_key::<Secp256r1Point>(hash, signature)
-        .expect('argent/invalid-sig-format');
-    let (recovered_signer, _) = recovered.get_coordinates().expect('argent/invalid-sig-format');
+        .expect('ctrl/invalid-sig-format');
+    let (recovered_signer, _) = recovered.get_coordinates().expect('ctrl/invalid-sig-format');
     recovered_signer == signer.pubkey.into()
 }
 

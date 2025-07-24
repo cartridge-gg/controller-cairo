@@ -2,7 +2,7 @@
 // This is achieved by adding outside_execution::ERC165_OUTSIDE_EXECUTION_INTERFACE_ID
 #[starknet::component]
 mod outside_execution_component {
-    use argent::outside_execution::{
+    use controller::outside_execution::{
         outside_execution_hash::{OffChainMessageOutsideExecutionRev2},
         interface::{OutsideExecution, IOutsideExecutionCallback, IOutsideExecution}
     };
@@ -87,19 +87,19 @@ mod outside_execution_component {
             reentrancy_guard.start();
 
             if outside_execution.caller.into() != 'ANY_CALLER' {
-                assert(get_caller_address() == outside_execution.caller, 'argent/invalid-caller');
+                assert(get_caller_address() == outside_execution.caller, 'ctrl/invalid-caller');
             }
 
             let block_timestamp = get_block_timestamp();
             assert(
                 outside_execution.execute_after < block_timestamp
                     && block_timestamp < outside_execution.execute_before,
-                'argent/invalid-timestamp'
+                'ctrl/invalid-timestamp'
             );
             let (channel, mask) = outside_execution.nonce;
             let current_mask = self.outside_nonces.read(channel);
             let (and, _, or) = bitwise(current_mask, mask);
-            assert(mask != 0 && and == 0, 'argent/invalid-outside-nonce');
+            assert(mask != 0 && and == 0, 'ctrl/invalid-outside-nonce');
             self.outside_nonces.write(channel, or);
             let mut state = self.get_contract_mut();
             let result = state

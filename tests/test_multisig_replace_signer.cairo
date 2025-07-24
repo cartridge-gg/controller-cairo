@@ -1,10 +1,10 @@
-use argent::multisig::multisig::multisig_component;
-use argent::signer::signer_signature::{Signer, SignerSignature, SignerTrait, starknet_signer_from_pubkey};
-use argent::signer_storage::signer_list::signer_list_component;
+use controller::multisig::multisig::multisig_component;
+use controller::signer::signer_signature::{Signer, SignerSignature, SignerTrait, starknet_signer_from_pubkey};
+use controller::signer_storage::signer_list::signer_list_component;
 use snforge_std::{EventAssertions, EventFetcher, EventSpy, SpyOn, spy_events};
 use super::setup::constants::MULTISIG_OWNER;
 use super::setup::multisig_test_setup::{
-    ITestArgentMultisigDispatcherTrait, initialize_multisig, initialize_multisig_with,
+    ITestControllerMultisigDispatcherTrait, initialize_multisig, initialize_multisig_with,
     initialize_multisig_with_one_signer,
 };
 
@@ -120,7 +120,7 @@ fn replace_signer_end() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/not-a-signer',))]
+#[should_panic(expected: ('ctrl/not-a-signer',))]
 fn replace_invalid_signer() {
     // init
     let signer_1 = starknet_signer_from_pubkey(MULTISIG_OWNER(1).pubkey);
@@ -136,7 +136,7 @@ fn replace_invalid_signer() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/already-a-signer',))]
+#[should_panic(expected: ('ctrl/already-a-signer',))]
 fn replace_already_signer() {
     // init
     let signer_1 = starknet_signer_from_pubkey(MULTISIG_OWNER(1).pubkey);
@@ -149,7 +149,7 @@ fn replace_already_signer() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/already-a-signer',))]
+#[should_panic(expected: ('ctrl/already-a-signer',))]
 fn replace_already_same_signer() {
     // init
     let signer_1 = starknet_signer_from_pubkey(MULTISIG_OWNER(1).pubkey);

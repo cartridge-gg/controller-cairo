@@ -1,15 +1,15 @@
-use argent::multisig::multisig::multisig_component;
-use argent::presets::multisig_account::ArgentMultisigAccount;
-use argent::signer::signer_signature::{
+use controller::multisig::multisig::multisig_component;
+use controller::presets::multisig_account::ControllerMultisigAccount;
+use controller::signer::signer_signature::{
     Signer, SignerSignature, SignerTrait, StarknetSigner, starknet_signer_from_pubkey,
 };
-use argent::signer_storage::signer_list::signer_list_component;
+use controller::signer_storage::signer_list::signer_list_component;
 use snforge_std::{
     ContractClassTrait, EventAssertions, EventFetcher, EventSpy, EventSpyAssertionsTrait, SpyOn, spy_events,
 };
 use super::setup::constants::MULTISIG_OWNER;
 use super::setup::multisig_test_setup::{
-    ITestArgentMultisigDispatcherTrait, declare_multisig, initialize_multisig, initialize_multisig_with,
+    ITestControllerMultisigDispatcherTrait, declare_multisig, initialize_multisig, initialize_multisig_with,
     initialize_multisig_with_one_signer,
 };
 
@@ -54,8 +54,8 @@ fn invalid_threshold() {
     threshold.serialize(ref calldata);
     array![signer_1].serialize(ref calldata);
 
-    let argent_class = declare_multisig();
-    argent_class.deploy(@calldata).expect_err('argent/bad-threshold');
+    let controller_class = declare_multisig();
+    controller_class.deploy(@calldata).expect_err('ctrl/bad-threshold');
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn change_threshold() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/bad-threshold',))]
+#[should_panic(expected: ('ctrl/bad-threshold',))]
 fn change_to_excessive_threshold() {
     let signer_1 = starknet_signer_from_pubkey(MULTISIG_OWNER(1).pubkey);
     let multisig = initialize_multisig_with(threshold: 1, signers: array![signer_1].span());
@@ -86,7 +86,7 @@ fn change_to_excessive_threshold() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-threshold',))]
+#[should_panic(expected: ('ctrl/invalid-threshold',))]
 fn change_to_zero_threshold() {
     let signer_1 = starknet_signer_from_pubkey(MULTISIG_OWNER(1).pubkey);
     let multisig = initialize_multisig_with(threshold: 1, signers: array![signer_1].span());
@@ -96,7 +96,7 @@ fn change_to_zero_threshold() {
 
 #[test]
 fn get_name() {
-    assert_eq!(initialize_multisig().get_name(), 'ArgentMultisig', "Name should be ArgentMultisig");
+    assert_eq!(initialize_multisig().get_name(), 'ControllerMultisig', "Name should be ControllerMultisig");
 }
 
 #[test]

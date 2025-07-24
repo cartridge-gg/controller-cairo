@@ -1,13 +1,13 @@
-use argent::mocks::recovery_mocks::ThresholdRecoveryMock;
-use argent::multisig::interface::IArgentMultisigInternal;
-use argent::multisig::interface::{IArgentMultisig, IArgentMultisigDispatcher, IArgentMultisigDispatcherTrait};
-use argent::recovery::interface::{IRecovery, IRecoveryDispatcher, IRecoveryDispatcherTrait, EscapeStatus};
-use argent::recovery::threshold_recovery::{
+use controller::mocks::recovery_mocks::ThresholdRecoveryMock;
+use controller::multisig::interface::IControllerMultisigInternal;
+use controller::multisig::interface::{IControllerMultisig, IControllerMultisigDispatcher, IControllerMultisigDispatcherTrait};
+use controller::recovery::interface::{IRecovery, IRecoveryDispatcher, IRecoveryDispatcherTrait, EscapeStatus};
+use controller::recovery::threshold_recovery::{
     IToggleThresholdRecovery, IToggleThresholdRecoveryDispatcher, IToggleThresholdRecoveryDispatcherTrait
 };
-use argent::recovery::{threshold_recovery::threshold_recovery_component};
-use argent::signer::{signer_signature::{Signer, StarknetSigner, starknet_signer_from_pubkey, SignerTrait}};
-use argent::signer_storage::signer_list::signer_list_component;
+use controller::recovery::{threshold_recovery::threshold_recovery_component};
+use controller::signer::{signer_signature::{Signer, StarknetSigner, starknet_signer_from_pubkey, SignerTrait}};
+use controller::signer_storage::signer_list::signer_list_component;
 use snforge_std::{
     CheatSpan, cheat_caller_address, cheat_block_timestamp, stop_prank, test_address, declare, ContractClassTrait, ContractClass,
     spy_events, SpyOn, EventSpy, EventFetcher, EventAssertions, EventSpyAssertionsTrait
@@ -29,18 +29,18 @@ fn SIGNER_3() -> Signer {
     starknet_signer_from_pubkey(MULTISIG_OWNER(3).pubkey)
 }
 
-fn setup() -> (IRecoveryDispatcher, IToggleThresholdRecoveryDispatcher, IArgentMultisigDispatcher) {
+fn setup() -> (IRecoveryDispatcher, IToggleThresholdRecoveryDispatcher, IControllerMultisigDispatcher) {
     let contract_class = declare("ThresholdRecoveryMock");
     let constructor = array![];
     let contract_address = contract_class.deploy(@constructor).expect('Deployment failed');
 
     cheat_caller_address(contract_address, contract_address, CheatSpan::Indefinite(()));
-    IArgentMultisigDispatcher { contract_address }.add_signers(2, array![SIGNER_1(), SIGNER_2()]);
+    IControllerMultisigDispatcher { contract_address }.add_signers(2, array![SIGNER_1(), SIGNER_2()]);
     IToggleThresholdRecoveryDispatcher { contract_address }.toggle_escape(true, 10, 10);
     (
         IRecoveryDispatcher { contract_address },
         IToggleThresholdRecoveryDispatcher { contract_address },
-        IArgentMultisigDispatcher { contract_address }
+        IControllerMultisigDispatcher { contract_address }
     )
 }
 
@@ -61,7 +61,7 @@ fn test_toggle_escape() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/only-self',))]
+#[should_panic(expected: ('ctrl/only-self',))]
 fn test_toggle_unauthorized() {
     let (_, toggle_component, _) = setup();
     let address: ContractAddress = 42.try_into().unwrap();
@@ -130,7 +130,7 @@ fn test_trigger_escape_can_override() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/cannot-override-escape',))]
+#[should_panic(expected: ('ctrl/cannot-override-escape',))]
 fn test_trigger_escape_cannot_override() {
     let (component, _, _) = setup();
     component.trigger_escape(array![SIGNER_2()], array![SIGNER_3()]);
@@ -138,14 +138,14 @@ fn test_trigger_escape_cannot_override() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-escape-length',))]
+#[should_panic(expected: ('ctrl/invalid-escape-length',))]
 fn test_trigger_escape_invalid_input() {
     let (component, _, _) = setup();
     component.trigger_escape(array![SIGNER_2()], array![SIGNER_3(), SIGNER_1()]);
 }
 
 #[test]
-#[should_panic(expected: ('argent/escape-disabled',))]
+#[should_panic(expected: ('ctrl/escape-disabled',))]
 fn test_trigger_escape_not_enabled() {
     let (component, toggle_component, _) = setup();
     toggle_component.toggle_escape(false, 0, 0);
@@ -153,7 +153,7 @@ fn test_trigger_escape_not_enabled() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/only-self',))]
+#[should_panic(expected: ('ctrl/only-self',))]
 fn test_trigger_escape_unauthorized() {
     let (component, _, _) = setup();
     let address: ContractAddress = 42.try_into().unwrap();
@@ -178,7 +178,7 @@ fn test_execute_escape() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-escape',))]
+#[should_panic(expected: ('ctrl/invalid-escape',))]
 fn test_execute_escape_NotReady() {
     let (component, _, _) = setup();
     component.trigger_escape(array![SIGNER_2()], array![SIGNER_3()]);
@@ -187,7 +187,7 @@ fn test_execute_escape_NotReady() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-escape',))]
+#[should_panic(expected: ('ctrl/invalid-escape',))]
 fn test_execute_escape_Expired() {
     let (component, _, _) = setup();
     component.trigger_escape(array![SIGNER_2()], array![SIGNER_3()]);
@@ -196,7 +196,7 @@ fn test_execute_escape_Expired() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/only-self',))]
+#[should_panic(expected: ('ctrl/only-self',))]
 fn test_execute_escape_unauthorized() {
     let (component, _, _) = setup();
     component.trigger_escape(array![SIGNER_2()], array![SIGNER_3()]);
@@ -257,7 +257,7 @@ fn test_cancel_escape_expired() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/only-self',))]
+#[should_panic(expected: ('ctrl/only-self',))]
 fn test_cancel_escape_unauthorized() {
     let (component, _, _) = setup();
     component.trigger_escape(array![SIGNER_2()], array![SIGNER_3()]);

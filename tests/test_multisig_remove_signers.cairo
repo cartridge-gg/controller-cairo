@@ -1,12 +1,12 @@
-use argent::multisig::multisig::multisig_component;
-use argent::signer::signer_signature::{
+use controller::multisig::multisig::multisig_component;
+use controller::signer::signer_signature::{
     Signer, SignerSignature, SignerTrait, StarknetSigner, starknet_signer_from_pubkey,
 };
-use argent::signer_storage::signer_list::signer_list_component;
+use controller::signer_storage::signer_list::signer_list_component;
 use snforge_std::{EventAssertions, EventFetcher, EventSpy, SpyOn, spy_events};
 use super::setup::constants::MULTISIG_OWNER;
 use super::setup::multisig_test_setup::{
-    ITestArgentMultisigDispatcherTrait, initialize_multisig, initialize_multisig_with,
+    ITestControllerMultisigDispatcherTrait, initialize_multisig, initialize_multisig_with,
 };
 
 #[test]
@@ -212,7 +212,7 @@ fn remove_3_and_2() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/not-a-signer',))]
+#[should_panic(expected: ('ctrl/not-a-signer',))]
 fn remove_invalid_signers() {
     // init
     let multisig = initialize_multisig();
@@ -223,7 +223,7 @@ fn remove_invalid_signers() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/not-a-signer',))]
+#[should_panic(expected: ('ctrl/not-a-signer',))]
 fn remove_same_signer_twice() {
     // init
     let multisig = initialize_multisig();
@@ -234,7 +234,7 @@ fn remove_same_signer_twice() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/bad-threshold',))]
+#[should_panic(expected: ('ctrl/bad-threshold',))]
 fn remove_signers_invalid_threshold() {
     // init
     let signer_1 = starknet_signer_from_pubkey(MULTISIG_OWNER(1).pubkey);
@@ -248,7 +248,7 @@ fn remove_signers_invalid_threshold() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-threshold',))]
+#[should_panic(expected: ('ctrl/invalid-threshold',))]
 fn remove_signers_zero_threshold() {
     // init
     let multisig = initialize_multisig();

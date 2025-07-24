@@ -1,22 +1,22 @@
-use argent::account::interface::Version;
-use argent::presets::argent_account::ArgentAccount;
-use argent::recovery::interface::{EscapeStatus, LegacyEscape};
-use argent::signer::signer_signature::{Signer, SignerSignature, StarknetSigner, starknet_signer_from_pubkey};
+use controller::account::interface::Version;
+use controller::presets::controller_account::ControllerAccount;
+use controller::recovery::interface::{EscapeStatus, LegacyEscape};
+use controller::signer::signer_signature::{Signer, SignerSignature, StarknetSigner, starknet_signer_from_pubkey};
 use core::traits::TryInto;
 use snforge_std::{CheatSpan, ContractClass, ContractClassTrait, DeclareResult, cheat_caller_address, declare};
 use starknet::ContractAddress;
 use starknet::account::Call;
-use super::constants::{ARGENT_ACCOUNT_ADDRESS, GUARDIAN, OWNER};
+use super::constants::{CONTROLLER_ACCOUNT_ADDRESS, GUARDIAN, OWNER};
 
 #[starknet::interface]
-trait ITestArgentAccount<TContractState> {
+trait ITestControllerAccount<TContractState> {
     // IAccount
     fn __validate_declare__(self: @TContractState, class_hash: felt252) -> felt252;
     fn __validate__(ref self: TContractState, calls: Array<Call>) -> felt252;
     fn __execute__(ref self: TContractState, calls: Array<Call>) -> Array<Span<felt252>>;
     fn is_valid_signature(self: @TContractState, hash: felt252, signature: Array<felt252>) -> felt252;
 
-    // IArgentAccount
+    // IControllerAccount
     fn __validate_deploy__(
         self: @TContractState,
         class_hash: felt252,
@@ -52,22 +52,22 @@ trait ITestArgentAccount<TContractState> {
     // IErc165
     fn supports_interface(self: @TContractState, interface_id: felt252) -> bool;
 
-    // IDeprecatedArgentAccount
+    // IDeprecatedControllerAccount
     fn getVersion(self: @TContractState) -> felt252;
     fn getName(self: @TContractState) -> felt252;
     fn supportsInterface(self: @TContractState, interface_id: felt252) -> felt252;
     fn isValidSignature(self: @TContractState, hash: felt252, signatures: Array<felt252>) -> felt252;
 }
 
-fn initialize_account() -> ITestArgentAccountDispatcher {
+fn initialize_account() -> ITestControllerAccountDispatcher {
     initialize_account_with(OWNER().pubkey, GUARDIAN().pubkey)
 }
 
-fn initialize_account_without_guardian() -> ITestArgentAccountDispatcher {
+fn initialize_account_without_guardian() -> ITestControllerAccountDispatcher {
     initialize_account_with(OWNER().pubkey, 0)
 }
 
-fn initialize_account_with(owner: felt252, guardian: felt252) -> ITestArgentAccountDispatcher {
+fn initialize_account_with(owner: felt252, guardian: felt252) -> ITestControllerAccountDispatcher {
     let mut calldata = array![];
     starknet_signer_from_pubkey(owner).serialize(ref calldata);
     let guardian_signer: Option<Signer> = match guardian {
@@ -76,20 +76,20 @@ fn initialize_account_with(owner: felt252, guardian: felt252) -> ITestArgentAcco
     };
     guardian_signer.serialize(ref calldata);
 
-    let declare_result = declare("ArgentAccount");
+    let declare_result = declare("ControllerAccount");
     let contract_class = match declare_result {
         Result::Ok(declare_result) => match declare_result {
             DeclareResult::Success(contract_class) => contract_class,
             DeclareResult::AlreadyDeclared(contract_class) => contract_class,
         },
-        Result::Err(_) => panic_with_felt252('err declaring ArgentAccount'),
+        Result::Err(_) => panic_with_felt252('err declaring ControllerAccount'),
     };
 
     let (contract_address, _) = contract_class
-        .deploy_at(@calldata, ARGENT_ACCOUNT_ADDRESS.try_into().unwrap())
-        .expect('Failed to deploy ArgentAccount');
+        .deploy_at(@calldata, CONTROLLER_ACCOUNT_ADDRESS.try_into().unwrap())
+        .expect('Failed to deploy ControllerAccount');
 
-    // This will set the caller for subsequent calls (avoid 'argent/only-self')
+    // This will set the caller for subsequent calls (avoid 'ctrl/only-self')
     cheat_caller_address(contract_address, contract_address, CheatSpan::Indefinite(()));
-    ITestArgentAccountDispatcher { contract_address }
+    ITestControllerAccountDispatcher { contract_address }
 }

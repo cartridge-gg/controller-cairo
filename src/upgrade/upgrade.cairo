@@ -1,4 +1,4 @@
-use argent::account::interface::SRC5_ACCOUNT_INTERFACE_ID;
+use controller::account::interface::SRC5_ACCOUNT_INTERFACE_ID;
 
 use starknet::{ClassHash, syscalls::replace_class_syscall};
 
@@ -9,12 +9,12 @@ trait IUpgradeInternal<TContractState> {
 
 #[starknet::component]
 mod upgrade_component {
-    use argent::account::interface::SRC5_ACCOUNT_INTERFACE_ID;
-    use argent::introspection::interface::{ISRC5LibraryDispatcher, ISRC5DispatcherTrait};
-    use argent::upgrade::interface::{
+    use controller::account::interface::SRC5_ACCOUNT_INTERFACE_ID;
+    use controller::introspection::interface::{ISRC5LibraryDispatcher, ISRC5DispatcherTrait};
+    use controller::upgrade::interface::{
         IUpgradableCallback, IUpgradeable, IUpgradableCallbackLibraryDispatcher, IUpgradableCallbackDispatcherTrait
     };
-    use argent::utils::asserts::assert_only_self;
+    use controller::utils::asserts::assert_only_self;
     use starknet::{ClassHash, syscalls::replace_class_syscall};
 
     #[storage]
@@ -41,7 +41,7 @@ mod upgrade_component {
             assert_only_self();
             let supports_interface = ISRC5LibraryDispatcher { class_hash: new_implementation }
                 .supports_interface(SRC5_ACCOUNT_INTERFACE_ID);
-            assert(supports_interface, 'argent/invalid-implementation');
+            assert(supports_interface, 'ctrl/invalid-implementation');
             IUpgradableCallbackLibraryDispatcher { class_hash: new_implementation }
                 .perform_upgrade(new_implementation, data.span());
         }
@@ -52,7 +52,7 @@ mod upgrade_component {
         TContractState, +HasComponent<TContractState>
     > of super::IUpgradeInternal<ComponentState<TContractState>> {
         fn complete_upgrade(ref self: ComponentState<TContractState>, new_implementation: ClassHash) {
-            replace_class_syscall(new_implementation).expect('argent/invalid-upgrade');
+            replace_class_syscall(new_implementation).expect('ctrl/invalid-upgrade');
             self.emit(AccountUpgraded { new_implementation });
         }
     }

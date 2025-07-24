@@ -1,5 +1,5 @@
-use argent::signer::signer_signature::{Signer, SignerStorageValue, SignerSignature, SignerType};
-use argent::utils::array_store::StoreFelt252Array;
+use controller::signer::signer_signature::{Signer, SignerStorageValue, SignerSignature, SignerType};
+use controller::utils::array_store::StoreFelt252Array;
 use starknet::ContractAddress;
 
 #[starknet::interface]
@@ -84,7 +84,7 @@ enum LegacyEscapeType {
     Owner
 }
 
-/// @notice The Legacy Escape (only used in the ArgentAccount)
+/// @notice The Legacy Escape (only used in the ControllerAccount)
 /// @param ready_at when the escape can be completed
 /// @param escape_type The type of the escape telling who is about to be escaped
 /// @param new_signer The new signer (new owner or new guardian address) or zero if guardian removed
@@ -127,11 +127,11 @@ impl PackEscape of starknet::StorePacking<Escape, Array<felt252>> {
         arr.append(value.ready_at.into());
         let mut target_signers_span = value.target_signers.span();
         let mut new_signers_span = value.new_signers.span();
-        assert(target_signers_span.len() == new_signers_span.len(), 'argent/invalid-len');
+        assert(target_signers_span.len() == new_signers_span.len(), 'ctrl/invalid-len');
         while let Option::Some(target_signer) = target_signers_span
             .pop_front() {
                 arr.append(*target_signer);
-                arr.append(*new_signers_span.pop_front().expect('argent/invalid-array-len'));
+                arr.append(*new_signers_span.pop_front().expect('ctrl/invalid-array-len'));
             };
         arr
     }
