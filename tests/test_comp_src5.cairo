@@ -1,12 +1,12 @@
-use argent::account::interface::{
+use controller::account::interface::{
     SRC5_ACCOUNT_INTERFACE_ID, SRC5_ACCOUNT_INTERFACE_ID_OLD_1, SRC5_ACCOUNT_INTERFACE_ID_OLD_2
 };
-use argent::introspection::interface::ISRC5;
-use argent::introspection::interface::ISRC5Legacy;
-use argent::introspection::interface::{SRC5_INTERFACE_ID, SRC5_INTERFACE_ID_OLD};
-use argent::introspection::src5::src5_component;
-use argent::mocks::src5_mocks::SRC5Mock;
-use argent::outside_execution::interface::{ERC165_OUTSIDE_EXECUTION_INTERFACE_ID_REV_2};
+use controller::introspection::interface::ISRC5;
+use controller::introspection::interface::ISRC5Legacy;
+use controller::introspection::interface::{SRC5_INTERFACE_ID, SRC5_INTERFACE_ID_OLD};
+use controller::introspection::src5::src5_component;
+use controller::mocks::src5_mocks::SRC5Mock;
+use controller::outside_execution::interface::{ERC165_OUTSIDE_EXECUTION_INTERFACE_ID_REV_2};
 
 const UNSUPORTED_INTERFACE_ID: felt252 = 0xffffffff;
 

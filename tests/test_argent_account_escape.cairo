@@ -1,11 +1,11 @@
-use argent::presets::argent_account::ArgentAccount;
-use argent::recovery::interface::EscapeStatus;
-use argent::signer::signer_signature::starknet_signer_from_pubkey;
+use controller::presets::controller_account::ControllerAccount;
+use controller::recovery::interface::EscapeStatus;
+use controller::signer::signer_signature::starknet_signer_from_pubkey;
 use snforge_std::{
     CheatSpan, EventSpy, EventSpyAssertionsTrait, EventSpyTrait, cheat_block_timestamp, cheat_caller_address,
     spy_events,
 };
-use super::setup::account_test_setup::{ITestArgentAccountDispatcherTrait, initialize_account};
+use super::setup::account_test_setup::{ITestControllerAccountDispatcherTrait, initialize_account};
 
 #[test]
 fn set_escape_security_period() {
@@ -21,8 +21,8 @@ fn set_escape_security_period() {
     let new_escape_security_period = account.get_escape_security_period();
     assert_eq!(new_escape_security_period, 4200, "New value incorrect");
 
-    let event = ArgentAccount::Event::EscapeSecurityPeriodChanged(
-        ArgentAccount::EscapeSecurityPeriodChanged { escape_security_period: 4200 },
+    let event = ControllerAccount::Event::EscapeSecurityPeriodChanged(
+        ControllerAccount::EscapeSecurityPeriodChanged { escape_security_period: 4200 },
     );
     spy.assert_emitted(@array![(account.contract_address, event)]);
     let events = spy.get_events();
@@ -30,7 +30,7 @@ fn set_escape_security_period() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/ongoing-escape',))]
+#[should_panic(expected: ('ctrl/ongoing-escape',))]
 fn set_escape_security_period_with_not_ready_escape() {
     let account = initialize_account();
     account.trigger_escape_guardian(Option::None);
@@ -42,7 +42,7 @@ fn set_escape_security_period_with_not_ready_escape() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/ongoing-escape',))]
+#[should_panic(expected: ('ctrl/ongoing-escape',))]
 fn set_escape_security_period_with_ready_escape() {
     let account = initialize_account();
     account.trigger_escape_guardian(Option::None);
@@ -102,7 +102,7 @@ fn set_escape_security_period_get_escape_status() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/only-self',))]
+#[should_panic(expected: ('ctrl/only-self',))]
 fn set_escape_security_period_outside() {
     let account = initialize_account();
     cheat_caller_address(account.contract_address, 'another caller'.try_into().unwrap(), CheatSpan::Indefinite(()));
@@ -110,14 +110,14 @@ fn set_escape_security_period_outside() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-security-period',))]
+#[should_panic(expected: ('ctrl/invalid-security-period',))]
 fn set_escape_security_period__to_zero() {
     let account = initialize_account();
     account.set_escape_security_period(0);
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-escape',))]
+#[should_panic(expected: ('ctrl/invalid-escape',))]
 fn set_escape_security_period_escape_too_early() {
     let account = initialize_account();
     account.set_escape_security_period(4200);
@@ -140,7 +140,7 @@ fn set_escape_security_period_escape_escape() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-escape',))]
+#[should_panic(expected: ('ctrl/invalid-escape',))]
 fn set_escape_security_period_escape_escape_too_late() {
     let account = initialize_account();
     account.set_escape_security_period(4200);

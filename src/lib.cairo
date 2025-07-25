@@ -46,9 +46,7 @@ mod external_recovery {
 }
 
 mod presets {
-    mod argent_account;
-    mod multisig_account;
-    mod user_account;
+    mod controller_account;
 }
 
 mod utils {
@@ -64,11 +62,9 @@ mod utils {
 }
 
 mod mocks {
-    mod future_argent_account;
-    mod future_argent_multisig;
+    mod future_controller_account;
     mod mock_dapp;
     mod mock_erc20;
-    mod multisig_mocks;
     mod recovery_mocks;
     mod signature_verifier;
     mod signer_list_mocks;

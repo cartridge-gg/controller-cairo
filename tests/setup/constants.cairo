@@ -1,4 +1,4 @@
-use argent::signer::signer_signature::{
+use controller::signer::signer_signature::{
     Secp256Signature, SignerTrait, StarknetSignature, StarknetSigner, starknet_signer_from_pubkey,
 };
 use ecdsa::check_ecdsa_signature;
@@ -17,7 +17,7 @@ struct KeyAndSig {
     sig: StarknetSignature,
 }
 
-const ARGENT_ACCOUNT_ADDRESS: felt252 = 0x222222222;
+const CONTROLLER_ACCOUNT_ADDRESS: felt252 = 0x222222222;
 
 const tx_hash: felt252 = 0x2d6479c0758efbb5aa07d35ed5454d728637fceab7ba544d3ea95403a5630a8;
 
@@ -63,10 +63,10 @@ fn WRONG_OWNER() -> KeyAndSig {
 
 fn NEW_OWNER() -> (StarknetSigner, StarknetSignature) {
     let new_owner_message_hash = new_owner_message_hash(
-        'SN_SEPOLIA', ARGENT_ACCOUNT_ADDRESS, starknet_signer_from_pubkey(OWNER().pubkey).into_guid(),
+        'SN_SEPOLIA', CONTROLLER_ACCOUNT_ADDRESS, starknet_signer_from_pubkey(OWNER().pubkey).into_guid(),
     );
     let new_owner = KeyPairTrait::from_secret_key('NEW_OWNER');
-    let pubkey = new_owner.public_key.try_into().expect('argent/zero-pubkey');
+    let pubkey = new_owner.public_key.try_into().expect('ctrl/zero-pubkey');
     let (r, s): (felt252, felt252) = new_owner.sign(new_owner_message_hash).unwrap();
     (StarknetSigner { pubkey }, StarknetSignature { r, s })
 }

@@ -1,9 +1,9 @@
 #[cfg(test)]
-mod test_argent_account;
+mod test_controller_account;
 #[cfg(test)]
-mod test_argent_account_escape;
+mod test_controller_account_escape;
 #[cfg(test)]
-mod test_argent_account_signatures;
+mod test_controller_account_signatures;
 #[cfg(test)]
 mod test_asserts;
 // #[cfg(test)]

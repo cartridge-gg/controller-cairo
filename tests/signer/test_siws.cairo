@@ -1,5 +1,5 @@
-use argent::signer::signer_signature::{Ed25519Signer, SIWSSignature, SignerSignature};
-use argent::signer::siws::is_valid_siws_signature;
+use controller::signer::signer_signature::{Ed25519Signer, SIWSSignature, SignerSignature};
+use controller::signer::siws::is_valid_siws_signature;
 use core::traits::TryInto;
 use garaga::ec_ops::{DerivePointFromXHint, G1Point, G1PointTrait, MSMHint, ec_safe_add, msm_g1};
 use garaga::signatures::eddsa_25519::{EdDSASignature, EdDSASignatureWithHint};

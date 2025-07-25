@@ -3,13 +3,13 @@ mod session_component {
     use alexandria_merkle_tree::merkle_tree::{
         Hasher, MerkleTree, MerkleTreeImpl, poseidon::PoseidonHasherImpl, MerkleTreeTrait,
     };
-    use argent::account::interface::{IAccount, IArgentUserAccount};
-    use argent::session::{
+    use controller::account::interface::{IAccount, IControllerUserAccount};
+    use controller::session::{
         session_hash::{OffChainMessageHashSessionRev1, MerkleLeafHash},
         interface::{ISessionable, SessionToken, Session, ISessionCallback},
     };
-    use argent::signer::signer_signature::{SignerSignatureTrait, SignerTrait, SignerSignature};
-    use argent::utils::{asserts::{assert_no_self_call, assert_only_self}, serialization::full_deserialize};
+    use controller::signer::signer_signature::{SignerSignatureTrait, SignerTrait, SignerSignature};
+    use controller::utils::{asserts::{assert_no_self_call, assert_only_self}, serialization::full_deserialize};
     use hash::{HashStateExTrait, HashStateTrait};
     use poseidon::PoseidonTrait;
     use starknet::{account::Call, get_contract_address, VALIDATED, get_block_timestamp, storage::Map};
@@ -38,7 +38,7 @@ mod session_component {
 
     #[embeddable_as(SessionImpl)]
     impl Sessionable<
-        TContractState, +HasComponent<TContractState>, +IAccount<TContractState>, +IArgentUserAccount<TContractState>,
+        TContractState, +HasComponent<TContractState>, +IAccount<TContractState>, +IControllerUserAccount<TContractState>,
     > of ISessionable<ComponentState<TContractState>> {
         fn revoke_session(ref self: ComponentState<TContractState>, session_hash: felt252) {
             assert_only_self();
@@ -69,7 +69,7 @@ mod session_component {
         TContractState,
         +HasComponent<TContractState>,
         +IAccount<TContractState>,
-        +IArgentUserAccount<TContractState>,
+        +IControllerUserAccount<TContractState>,
         +ISessionCallback<TContractState>,
     > of InternalTrait<TContractState> {
         #[inline(always)]

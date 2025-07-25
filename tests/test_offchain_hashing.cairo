@@ -1,12 +1,12 @@
-use argent::offchain_message::{
+use controller::offchain_message::{
     interface::{IStructHashRev1, StarknetDomain},
     precalculated_hashing::{get_message_hash_rev_1_with_precalc},
 };
-use argent::outside_execution::outside_execution_hash::{
+use controller::outside_execution::outside_execution_hash::{
     MAINNET_FIRST_HADES_PERMUTATION as MAINNET_FIRST_HADES_PERMUTATION_OE,
     SEPOLIA_FIRST_HADES_PERMUTATION as SEPOLIA_FIRST_HADES_PERMUTATION_OE,
 };
-use argent::session::session_hash::{
+use controller::session::session_hash::{
     MAINNET_FIRST_HADES_PERMUTATION as MAINNET_FIRST_HADES_PERMUTATION_SESSION,
     SEPOLIA_FIRST_HADES_PERMUTATION as SEPOLIA_FIRST_HADES_PERMUTATION_SESSION,
 };

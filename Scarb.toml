@@ -1,5 +1,5 @@
 [package]
-name = "argent"
+name = "controller"
 version = "0.1.0"
 cairo-version = "2.11.1"
 
@@ -32,16 +32,4 @@ sort-module-level-items = true
 
 [scripts]
 test = "snforge test"
-format = "scarb fmt && yarn prettier --write ."
-lint = "yarn eslint ."
-test-ts = "scarb --profile release build && yarn tsc && yarn mocha tests-integration/*.test.ts"
-test-multisig = "scarb --profile release build && yarn tsc && yarn mocha tests-integration/multisig*.test.ts"
-test-session = "scarb --profile release build && yarn tsc && yarn mocha tests-integration/session*.test.ts"
-test-list = "scarb --profile release build && yarn tsc && yarn mocha --dry-run tests-integration/*.test.ts"
-start-devnet = "./scripts/start-devnet.sh"
-kill-devnet = "lsof -t -i tcp:5050 | xargs kill"
-profile = "scarb --profile release build && node --loader ts-node/esm scripts/profile-account.ts"
-deploy-account = "scarb --profile release build && node --loader ts-node/esm scripts/deploy-account.ts"
-deploy-multisig = "scarb --profile release build && node --loader ts-node/esm scripts/deploy-multisig.ts"
-generate-signature = "node --loader ts-node/esm ./scripts/generate-signature.ts"
-update-webauthn-dapp = "scarb --profile release build && cp target/release/*ArgentAccount* examples/webauthn/src/lib"
+format = "scarb fmt"

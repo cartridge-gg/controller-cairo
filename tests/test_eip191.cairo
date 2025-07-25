@@ -1,5 +1,5 @@
-use argent::signer::eip191::{calculate_eip191_hash, is_valid_eip191_signature};
-use argent::signer::signer_signature::{SignerSignature, SignerSignatureTrait, Eip191Signer, Secp256Signature};
+use controller::signer::eip191::{calculate_eip191_hash, is_valid_eip191_signature};
+use controller::signer::signer_signature::{SignerSignature, SignerSignatureTrait, Eip191Signer, Secp256Signature};
 use super::setup::constants::{tx_hash};
 
 const eth_address: felt252 = 0x3da5e1F7B6D63E9982A6c26D8eCFd8219654E087;

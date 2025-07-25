@@ -1,6 +1,6 @@
-use argent::external_recovery::interface::{EscapeCall, Escape};
-use argent::recovery::interface::{EscapeEnabled, EscapeStatus};
-use argent::utils::serialization::serialize;
+use controller::external_recovery::interface::{EscapeCall, Escape};
+use controller::recovery::interface::{EscapeEnabled, EscapeStatus};
+use controller::utils::serialization::serialize;
 
 /// This trait must be implemented when using the component `external_recovery`
 trait IExternalRecoveryCallback<TContractState> {
@@ -14,17 +14,17 @@ trait IExternalRecoveryCallback<TContractState> {
 /// @dev The recovery can be canceled by the authorized signers
 #[starknet::component]
 mod external_recovery_component {
-    use argent::external_recovery::interface::{
+    use controller::external_recovery::interface::{
         IExternalRecovery, EscapeCall, Escape, EscapeTriggered, EscapeExecuted, EscapeCanceled,
     };
-    use argent::recovery::interface::{EscapeEnabled, EscapeStatus};
-    use argent::signer::signer_signature::{Signer, SignerTrait};
-    use argent::signer_storage::interface::ISignerList;
-    use argent::signer_storage::signer_list::{
+    use controller::recovery::interface::{EscapeEnabled, EscapeStatus};
+    use controller::signer::signer_signature::{Signer, SignerTrait};
+    use controller::signer_storage::interface::ISignerList;
+    use controller::signer_storage::signer_list::{
         signer_list_component, signer_list_component::{SignerListInternalImpl},
     };
-    use argent::utils::asserts::assert_only_self;
-    use argent::utils::serialization::serialize;
+    use controller::utils::asserts::assert_only_self;
+    use controller::utils::serialization::serialize;
     use openzeppelin::security::reentrancyguard::{
         ReentrancyGuardComponent, ReentrancyGuardComponent::InternalImpl,
     };
@@ -64,14 +64,14 @@ mod external_recovery_component {
             self.assert_only_guardian();
 
             let escape_config: EscapeEnabled = self.escape_enabled.read();
-            assert(escape_config.is_enabled, 'argent/recovery-disabled');
+            assert(escape_config.is_enabled, 'ctrl/recovery-disabled');
             let call_hash = get_escape_call_hash(@call);
             assert(
                 call.selector == selector!("replace_signer")
                     || call.selector == selector!("remove_signers")
                     || call.selector == selector!("add_signers")
                     || call.selector == selector!("change_threshold"),
-                'argent/invalid-selector',
+                'ctrl/invalid-selector',
             );
 
             let current_escape: Escape = self.escape.read();
@@ -96,10 +96,10 @@ mod external_recovery_component {
             let current_escape_status = self
                 .get_escape_status(current_escape.ready_at, escape_config.expiry_period);
             let call_hash = get_escape_call_hash(@call);
-            assert(current_escape_status == EscapeStatus::Ready, 'argent/invalid-escape');
+            assert(current_escape_status == EscapeStatus::Ready, 'ctrl/invalid-escape');
             assert(
                 current_escape.call_hash == get_escape_call_hash(@call),
-                'argent/invalid-escape-call',
+                'ctrl/invalid-escape-call',
             );
 
             let mut callback = self.get_contract_mut();
@@ -117,7 +117,7 @@ mod external_recovery_component {
             let escape_config = self.escape_enabled.read();
             let current_escape_status = self
                 .get_escape_status(current_escape.ready_at, escape_config.expiry_period);
-            assert(current_escape_status != EscapeStatus::None, 'argent/invalid-escape');
+            assert(current_escape_status != EscapeStatus::None, 'ctrl/invalid-escape');
             self.escape.write(Default::default());
             if current_escape_status != EscapeStatus::Expired {
                 self.emit(EscapeCanceled { call_hash: current_escape.call_hash });
@@ -152,24 +152,24 @@ mod external_recovery_component {
             match current_escape_status {
                 EscapeStatus::None => (), // ignore
                 EscapeStatus::NotReady |
-                EscapeStatus::Ready => panic_with_felt252('argent/ongoing-escape'),
+                EscapeStatus::Ready => panic_with_felt252('ctrl/ongoing-escape'),
                 EscapeStatus::Expired => self.escape.write(Default::default()),
             }
 
             if is_enabled {
-                assert(security_period >= MIN_ESCAPE_PERIOD, 'argent/invalid-security-period');
-                assert(expiry_period >= MIN_ESCAPE_PERIOD, 'argent/invalid-expiry-period');
-                assert(guardian.is_non_zero(), 'argent/invalid-zero-guardian');
-                assert(guardian != get_contract_address(), 'argent/invalid-guardian');
+                assert(security_period >= MIN_ESCAPE_PERIOD, 'ctrl/invalid-security-period');
+                assert(expiry_period >= MIN_ESCAPE_PERIOD, 'ctrl/invalid-expiry-period');
+                assert(guardian.is_non_zero(), 'ctrl/invalid-zero-guardian');
+                assert(guardian != get_contract_address(), 'ctrl/invalid-guardian');
                 self
                     .escape_enabled
                     .write(EscapeEnabled { is_enabled: true, security_period, expiry_period });
                 self.guardian.write(guardian);
             } else {
-                assert(escape_config.is_enabled, 'argent/escape-disabled');
+                assert(escape_config.is_enabled, 'ctrl/escape-disabled');
                 assert(
                     security_period == 0 && expiry_period == 0 && guardian.is_zero(),
-                    'argent/invalid-escape-params',
+                    'ctrl/invalid-escape-params',
                 );
                 self
                     .escape_enabled
@@ -204,7 +204,7 @@ mod external_recovery_component {
         }
 
         fn assert_only_guardian(self: @ComponentState<TContractState>) {
-            assert(self.guardian.read() == get_caller_address(), 'argent/only-guardian');
+            assert(self.guardian.read() == get_caller_address(), 'ctrl/only-guardian');
         }
     }
 }

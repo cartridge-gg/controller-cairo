@@ -57,7 +57,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "argent"
+name = "controller"
 version = "0.1.0"
 dependencies = [
  "alexandria_data_structures",

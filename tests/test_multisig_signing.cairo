@@ -1,10 +1,10 @@
-use argent::signer::signer_signature::{Signer, StarknetSigner, SignerSignature, starknet_signer_from_pubkey};
-use argent::utils::serialization::serialize;
+use controller::signer::signer_signature::{Signer, StarknetSigner, SignerSignature, starknet_signer_from_pubkey};
+use controller::utils::serialization::serialize;
 use starknet::VALIDATED;
 use super::setup::constants::{MULTISIG_OWNER, tx_hash};
 use super::setup::{
     multisig_test_setup::{
-        initialize_multisig_with, ITestArgentMultisigDispatcherTrait, initialize_multisig_with_one_signer
+        initialize_multisig_with, ITestControllerMultisigDispatcherTrait, initialize_multisig_with_one_signer
     },
     utils::{to_starknet_signatures, to_starknet_signer_signatures}
 };
@@ -30,7 +30,7 @@ fn test_double_signature() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/signatures-not-sorted',))]
+#[should_panic(expected: ('ctrl/signatures-not-sorted',))]
 fn test_double_signature_order() {
     let threshold = 2;
     let signer_1 = starknet_signer_from_pubkey(MULTISIG_OWNER(1).pubkey);
@@ -42,7 +42,7 @@ fn test_double_signature_order() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/signatures-not-sorted',))]
+#[should_panic(expected: ('ctrl/signatures-not-sorted',))]
 fn test_same_owner_twice() {
     let threshold = 2;
     let signer_1 = starknet_signer_from_pubkey(MULTISIG_OWNER(1).pubkey);
@@ -54,7 +54,7 @@ fn test_same_owner_twice() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/signature-invalid-length',))]
+#[should_panic(expected: ('ctrl/signature-invalid-length',))]
 fn test_missing_owner_signature() {
     let threshold = 2;
     let signer_1 = starknet_signer_from_pubkey(MULTISIG_OWNER(1).pubkey);
@@ -68,7 +68,7 @@ fn test_missing_owner_signature() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-signature-format',))]
+#[should_panic(expected: ('ctrl/invalid-signature-format',))]
 fn test_short_signature() {
     let multisig = initialize_multisig_with_one_signer();
 
@@ -77,7 +77,7 @@ fn test_short_signature() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/signature-invalid-length',))]
+#[should_panic(expected: ('ctrl/signature-invalid-length',))]
 fn test_long_signature() {
     let multisig = initialize_multisig_with_one_signer();
 

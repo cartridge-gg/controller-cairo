@@ -1,7 +1,7 @@
 #[starknet::component]
 mod signer_list_component {
-    use argent::signer::signer_signature::Signer;
-    use argent::signer_storage::interface::ISignerList;
+    use controller::signer::signer_signature::Signer;
+    use controller::signer_storage::interface::ISignerList;
     use starknet::storage::Map;
 
     #[storage]
@@ -64,9 +64,9 @@ mod signer_list_component {
         fn add_signer(
             ref self: ComponentState<TContractState>, signer_to_add: felt252, last_signer: felt252,
         ) {
-            assert(signer_to_add != 0, 'argent/invalid-zero-signer');
+            assert(signer_to_add != 0, 'ctrl/invalid-zero-signer');
             let is_signer = self.is_signer_using_last(signer_to_add, last_signer);
-            assert(!is_signer, 'argent/already-a-signer');
+            assert(!is_signer, 'ctrl/already-a-signer');
             // Signers are added at the end of the list
             self.signer_list.write(last_signer, signer_to_add);
         }
@@ -92,7 +92,7 @@ mod signer_list_component {
             last_signer: felt252,
         ) -> felt252 {
             let is_signer = self.is_signer_using_last(signer_to_remove, last_signer);
-            assert(is_signer, 'argent/not-a-signer');
+            assert(is_signer, 'ctrl/not-a-signer');
 
             // Signer pointer set to 0, Previous pointer set to the next in the list
             let previous_signer = self.find_signer_before(signer_to_remove);
@@ -128,13 +128,13 @@ mod signer_list_component {
             signer_to_add: felt252,
             last_signer: felt252,
         ) {
-            assert(signer_to_add != 0, 'argent/invalid-zero-signer');
+            assert(signer_to_add != 0, 'ctrl/invalid-zero-signer');
 
             let signer_to_add_status = self.is_signer_using_last(signer_to_add, last_signer);
-            assert(!signer_to_add_status, 'argent/already-a-signer');
+            assert(!signer_to_add_status, 'ctrl/already-a-signer');
 
             let signer_to_remove_status = self.is_signer_using_last(signer_to_remove, last_signer);
-            assert(signer_to_remove_status, 'argent/not-a-signer');
+            assert(signer_to_remove_status, 'ctrl/not-a-signer');
 
             // removed signer will point to 0
             // previous signer will point to the new one
@@ -245,7 +245,7 @@ mod signer_list_component {
             let mut current_signer = 0;
             loop {
                 let next_signer = self.signer_list.read(current_signer);
-                assert(next_signer != 0, 'argent/cant-find-signer-before');
+                assert(next_signer != 0, 'ctrl/cant-find-signer-before');
 
                 if next_signer == signer_after {
                     break current_signer;

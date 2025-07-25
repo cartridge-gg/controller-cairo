@@ -1,15 +1,15 @@
-use argent::external_recovery::external_recovery::{EscapeCall, external_recovery_component, get_escape_call_hash};
-use argent::external_recovery::interface::{
+use controller::external_recovery::external_recovery::{EscapeCall, external_recovery_component, get_escape_call_hash};
+use controller::external_recovery::interface::{
     Escape, IExternalRecovery, IExternalRecoveryDispatcher, IExternalRecoveryDispatcherTrait,
 };
-use argent::mocks::recovery_mocks::ExternalRecoveryMock;
-use argent::multisig::interface::{
-    IArgentMultisig, IArgentMultisigDispatcher, IArgentMultisigDispatcherTrait, IArgentMultisigInternal,
+use controller::mocks::recovery_mocks::ExternalRecoveryMock;
+use controller::multisig::interface::{
+    IControllerMultisig, IControllerMultisigDispatcher, IControllerMultisigDispatcherTrait, IControllerMultisigInternal,
 };
-use argent::recovery::interface::EscapeStatus;
-use argent::signer::signer_signature::{Signer, SignerTrait, StarknetSigner, starknet_signer_from_pubkey};
-use argent::signer_storage::signer_list::signer_list_component;
-use argent::utils::serialization::serialize;
+use controller::recovery::interface::EscapeStatus;
+use controller::signer::signer_signature::{Signer, SignerTrait, StarknetSigner, starknet_signer_from_pubkey};
+use controller::signer_storage::signer_list::signer_list_component;
+use controller::utils::serialization::serialize;
 use core::traits::TryInto;
 use snforge_std::{
     CheatSpan, ContractClass, ContractClassTrait, EventAssertions, EventFetcher, EventSpy, SpyOn, declare, spy_events,
@@ -43,12 +43,12 @@ fn ZERO_ADDRESS() -> ContractAddress {
     0.try_into().unwrap()
 }
 
-fn setup() -> (IExternalRecoveryDispatcher, IArgentMultisigDispatcher) {
+fn setup() -> (IExternalRecoveryDispatcher, IControllerMultisigDispatcher) {
     let contract_address = declare("ExternalRecoveryMock").deploy(@array![]).expect('Deployment failed');
     cheat_caller_address(contract_address, contract_address, CheatSpan::Indefinite(()));
-    IArgentMultisigDispatcher { contract_address }.add_signers(2, array![SIGNER_1(), SIGNER_2()]);
+    IControllerMultisigDispatcher { contract_address }.add_signers(2, array![SIGNER_1(), SIGNER_2()]);
     IExternalRecoveryDispatcher { contract_address }.toggle_escape(true, (10 * 60), (10 * 60), GUARDIAN());
-    (IExternalRecoveryDispatcher { contract_address }, IArgentMultisigDispatcher { contract_address })
+    (IExternalRecoveryDispatcher { contract_address }, IControllerMultisigDispatcher { contract_address })
 }
 
 // Toggle
@@ -74,7 +74,7 @@ fn test_toggle_escape() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/only-self',))]
+#[should_panic(expected: ('ctrl/only-self',))]
 fn test_toggle_unauthorized() {
     let (component, _) = setup();
     cheat_caller_address(component.contract_address, 42.try_into().unwrap(), CheatSpan::Indefinite(()));
@@ -82,21 +82,21 @@ fn test_toggle_unauthorized() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-guardian',))]
+#[should_panic(expected: ('ctrl/invalid-guardian',))]
 fn test_toggle_guardian_same_as_account() {
     let (component, _) = setup();
     component.toggle_escape(true, 10 * 60, 10 * 60, component.contract_address);
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-security-period',))]
+#[should_panic(expected: ('ctrl/invalid-security-period',))]
 fn test_toggle_small_security_period() {
     let (component, _) = setup();
     component.toggle_escape(true, (10 * 60) - 1, (10 * 60), ZERO_ADDRESS());
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-expiry-period',))]
+#[should_panic(expected: ('ctrl/invalid-expiry-period',))]
 fn test_toggle_small_expiry_period() {
     let (component, _) = setup();
     component.toggle_escape(true, (10 * 60), (10 * 60) - 1, ZERO_ADDRESS());
@@ -104,7 +104,7 @@ fn test_toggle_small_expiry_period() {
 
 
 #[test]
-#[should_panic(expected: ('argent/invalid-zero-guardian',))]
+#[should_panic(expected: ('ctrl/invalid-zero-guardian',))]
 fn test_toggle_zero_guardian() {
     let (component, _) = setup();
     component.toggle_escape(true, (10 * 60), (10 * 60), ZERO_ADDRESS());
@@ -115,7 +115,7 @@ fn replace_signer_call(remove: Signer, replace_with: Signer) -> EscapeCall {
 }
 
 #[test]
-#[should_panic(expected: ('argent/ongoing-escape',))]
+#[should_panic(expected: ('ctrl/ongoing-escape',))]
 fn test_toggle__true_with_not_ready_escape() {
     let (component, _) = setup();
     let contract_address = component.contract_address;
@@ -132,7 +132,7 @@ fn test_toggle__true_with_not_ready_escape() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/ongoing-escape',))]
+#[should_panic(expected: ('ctrl/ongoing-escape',))]
 fn test_toggle_false_with_not_ready_escape() {
     let (component, _) = setup();
     let contract_address = component.contract_address;
@@ -149,7 +149,7 @@ fn test_toggle_false_with_not_ready_escape() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/ongoing-escape',))]
+#[should_panic(expected: ('ctrl/ongoing-escape',))]
 fn test_toggle_true_with_ready_escape() {
     let (component, _) = setup();
     let contract_address = component.contract_address;
@@ -167,7 +167,7 @@ fn test_toggle_true_with_ready_escape() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/ongoing-escape',))]
+#[should_panic(expected: ('ctrl/ongoing-escape',))]
 fn test_toggle_false_with_ready_escape() {
     let (component, _) = setup();
     let contract_address = component.contract_address;
@@ -273,7 +273,7 @@ fn test_trigger_escape_can_override() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/only-guardian',))]
+#[should_panic(expected: ('ctrl/only-guardian',))]
 fn test_trigger_escape_not_enabled() {
     let (component, _) = setup();
     component.toggle_escape(false, 0, 0, ZERO_ADDRESS());
@@ -282,7 +282,7 @@ fn test_trigger_escape_not_enabled() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/only-guardian',))]
+#[should_panic(expected: ('ctrl/only-guardian',))]
 fn test_trigger_escape_unauthorized() {
     let (component, _) = setup();
     cheat_caller_address(component.contract_address, 42.try_into().unwrap(), CheatSpan::Indefinite(()));
@@ -292,7 +292,7 @@ fn test_trigger_escape_unauthorized() {
 // Escape
 
 #[test]
-#[should_panic(expected: ('argent/invalid-escape',))]
+#[should_panic(expected: ('ctrl/invalid-escape',))]
 fn test_execute_escape_NotReady() {
     let (component, _) = setup();
     cheat_caller_address(component.contract_address, GUARDIAN(), CheatSpan::Indefinite(()));
@@ -302,7 +302,7 @@ fn test_execute_escape_NotReady() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-escape',))]
+#[should_panic(expected: ('ctrl/invalid-escape',))]
 fn test_execute_escape_Expired() {
     let (component, _) = setup();
     cheat_caller_address(component.contract_address, GUARDIAN(), CheatSpan::Indefinite(()));
@@ -364,7 +364,7 @@ fn test_cancel_escape_expired() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/only-self',))]
+#[should_panic(expected: ('ctrl/only-self',))]
 fn test_cancel_escape_unauthorized() {
     let (component, _) = setup();
     cheat_caller_address(component.contract_address, GUARDIAN(), CheatSpan::Indefinite(()));

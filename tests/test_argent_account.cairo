@@ -1,5 +1,5 @@
-use argent::presets::argent_account::ArgentAccount;
-use argent::signer::signer_signature::{
+use controller::presets::controller_account::ControllerAccount;
+use controller::signer::signer_signature::{
     Signer, SignerSignature, SignerSignatureTrait, SignerTrait, StarknetSignature, StarknetSigner,
     starknet_signer_from_pubkey,
 };
@@ -7,7 +7,7 @@ use core::traits::TryInto;
 use snforge_std::{CheatSpan, cheat_block_timestamp, cheat_caller_address};
 use starknet::ContractAddress;
 use super::setup::account_test_setup::{
-    ITestArgentAccountDispatcherTrait, initialize_account, initialize_account_with, initialize_account_without_guardian,
+    ITestControllerAccountDispatcherTrait, initialize_account, initialize_account_with, initialize_account_without_guardian,
 };
 use super::setup::utils::{felt252TryIntoStarknetSigner, set_tx_version_foundry};
 use super::setup::constants::{NEW_OWNER, OWNER, WRONG_OWNER};
@@ -21,7 +21,7 @@ fn initialize() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-tx-version',))]
+#[should_panic(expected: ('ctrl/invalid-tx-version',))]
 fn check_transaction_version_on_execute() {
     let account = initialize_account();
     let zero_address: ContractAddress = 0.try_into().unwrap();
@@ -31,7 +31,7 @@ fn check_transaction_version_on_execute() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-tx-version',))]
+#[should_panic(expected: ('ctrl/invalid-tx-version',))]
 fn check_transaction_version_on_validate() {
     let account = initialize_account();
     let zero_address: ContractAddress = 0.try_into().unwrap();
@@ -83,7 +83,7 @@ fn change_owner() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/only-self',))]
+#[should_panic(expected: ('ctrl/only-self',))]
 fn change_owner_only_self() {
     let account = initialize_account();
     let address: ContractAddress = 42.try_into().unwrap();
@@ -94,7 +94,7 @@ fn change_owner_only_self() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-owner-sig',))]
+#[should_panic(expected: ('ctrl/invalid-owner-sig',))]
 fn change_owner_invalid_message() {
     let account = initialize_account();
     let (signer, _) = NEW_OWNER();
@@ -105,7 +105,7 @@ fn change_owner_invalid_message() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-owner-sig',))]
+#[should_panic(expected: ('ctrl/invalid-owner-sig',))]
 fn change_owner_wrong_pub_key() {
     let account = initialize_account();
     let (_, signature) = NEW_OWNER();
@@ -122,7 +122,7 @@ fn change_guardian() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/only-self',))]
+#[should_panic(expected: ('ctrl/only-self',))]
 fn change_guardian_only_self() {
     let account = initialize_account();
     let guardian = Option::Some(starknet_signer_from_pubkey(22));
@@ -132,7 +132,7 @@ fn change_guardian_only_self() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/backup-should-be-null',))]
+#[should_panic(expected: ('ctrl/backup-should-be-null',))]
 fn change_guardian_to_zero() {
     let account = initialize_account();
     let guardian_backup = Option::Some(starknet_signer_from_pubkey(42));
@@ -159,7 +159,7 @@ fn change_guardian_backup() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/only-self',))]
+#[should_panic(expected: ('ctrl/only-self',))]
 fn change_guardian_backup_only_self() {
     let account = initialize_account();
     let guardian_backup = Option::Some(starknet_signer_from_pubkey(42));
@@ -177,7 +177,7 @@ fn change_guardian_backup_to_zero() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/guardian-required',))]
+#[should_panic(expected: ('ctrl/guardian-required',))]
 fn change_invalid_guardian_backup() {
     let account = initialize_account_without_guardian();
     let guardian_backup = Option::Some(starknet_signer_from_pubkey(22));
@@ -199,12 +199,12 @@ fn getVersion() {
 
 #[test]
 fn get_name() {
-    assert_eq!(initialize_account().get_name(), 'ArgentAccount', "Name should be ArgentAccount");
+    assert_eq!(initialize_account().get_name(), 'ControllerAccount', "Name should be ControllerAccount");
 }
 
 #[test]
 fn getName() {
-    assert_eq!(initialize_account().getName(), 'ArgentAccount', "Name should be ArgentAccount");
+    assert_eq!(initialize_account().getName(), 'ControllerAccount', "Name should be ControllerAccount");
 }
 
 #[test]
@@ -223,7 +223,7 @@ fn supportsInterface() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/non-null-caller',))]
+#[should_panic(expected: ('ctrl/non-null-caller',))]
 fn cant_call_validate() {
     let account = initialize_account();
     let address: ContractAddress = 42.try_into().unwrap();

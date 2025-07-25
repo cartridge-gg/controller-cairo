@@ -1,13 +1,13 @@
-use argent::multisig::multisig::multisig_component;
-use argent::presets::multisig_account::ArgentMultisigAccount;
-use argent::signer::signer_signature::{
+use controller::multisig::multisig::multisig_component;
+use controller::presets::multisig_account::ControllerMultisigAccount;
+use controller::signer::signer_signature::{
     Signer, SignerSignature, SignerTrait, StarknetSigner, starknet_signer_from_pubkey,
 };
-use argent::signer_storage::signer_list::signer_list_component;
+use controller::signer_storage::signer_list::signer_list_component;
 use snforge_std::{ContractClassTrait, EventAssertions, EventFetcher, EventSpy, SpyOn, spy_events};
 use super::setup::constants::MULTISIG_OWNER;
 use super::setup::multisig_test_setup::{
-    ITestArgentMultisigDispatcherTrait, declare_multisig, initialize_multisig, initialize_multisig_with,
+    ITestControllerMultisigDispatcherTrait, declare_multisig, initialize_multisig, initialize_multisig_with,
     initialize_multisig_with_one_signer,
 };
 
@@ -51,7 +51,7 @@ fn add_signers() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/already-a-signer',))]
+#[should_panic(expected: ('ctrl/already-a-signer',))]
 fn add_signer_already_in_list() {
     // init
     let multisig = initialize_multisig_with_one_signer();
@@ -62,7 +62,7 @@ fn add_signer_already_in_list() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/invalid-threshold',))]
+#[should_panic(expected: ('ctrl/invalid-threshold',))]
 fn add_signer_zero_threshold() {
     // init
     let multisig = initialize_multisig_with_one_signer();
@@ -73,7 +73,7 @@ fn add_signer_zero_threshold() {
 }
 
 #[test]
-#[should_panic(expected: ('argent/bad-threshold',))]
+#[should_panic(expected: ('ctrl/bad-threshold',))]
 fn add_signer_excessive_threshold() {
     // init
     let multisig = initialize_multisig_with_one_signer();

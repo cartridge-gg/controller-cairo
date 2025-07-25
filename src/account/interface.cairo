@@ -1,5 +1,5 @@
-use argent::recovery::interface::{LegacyEscape, EscapeStatus};
-use argent::signer::signer_signature::{Signer, SignerType, SignerSignature};
+use controller::recovery::interface::{LegacyEscape, EscapeStatus};
+use controller::signer::signer_signature::{Signer, SignerType, SignerSignature};
 use starknet::account::Call;
 
 const SRC5_ACCOUNT_INTERFACE_ID: felt252 = 0x2ceccef7f994940b3962a6c67e0ba4fcd37df7d131417c604f91e03caecc1cd;
@@ -29,7 +29,7 @@ trait IAccount<TContractState> {
 }
 
 #[starknet::interface]
-trait IArgentAccount<TContractState> {
+trait IControllerAccount<TContractState> {
     fn __validate_declare__(self: @TContractState, class_hash: felt252) -> felt252;
     fn __validate_deploy__(
         self: @TContractState,
@@ -43,7 +43,7 @@ trait IArgentAccount<TContractState> {
 }
 
 #[starknet::interface]
-trait IArgentUserAccount<TContractState> {
+trait IControllerUserAccount<TContractState> {
     fn __validate_declare__(self: @TContractState, class_hash: felt252) -> felt252;
     fn __validate_deploy__(
         self: @TContractState,
@@ -143,7 +143,7 @@ trait IArgentUserAccount<TContractState> {
 
 /// Deprecated methods for compatibility reasons
 #[starknet::interface]
-trait IDeprecatedArgentAccount<TContractState> {
+trait IDeprecatedControllerAccount<TContractState> {
     fn getVersion(self: @TContractState) -> felt252;
     fn getName(self: @TContractState) -> felt252;
     /// For compatibility reasons this function returns 1 when the signature is valid, and panics otherwise

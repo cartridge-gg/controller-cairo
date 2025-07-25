@@ -18,16 +18,16 @@ trait IThresholdRecoveryInternal<TContractState> {
 /// The recovery can be canceled by threshold signers. 
 #[starknet::component]
 mod threshold_recovery_component {
-    use argent::recovery::interface::{
+    use controller::recovery::interface::{
         Escape, EscapeEnabled, EscapeStatus, IRecovery, EscapeExecuted, EscapeTriggered, EscapeCanceled
     };
-    use argent::signer::signer_signature::{Signer, SignerTrait};
-    use argent::signer_storage::interface::ISignerList;
-    use argent::signer_storage::signer_list::{
+    use controller::signer::signer_signature::{Signer, SignerTrait};
+    use controller::signer_storage::interface::ISignerList;
+    use controller::signer_storage::signer_list::{
         signer_list_component,
         signer_list_component::{SignerListInternalImpl, OwnerAddedGuid, OwnerRemovedGuid, SignerLinked}
     };
-    use argent::utils::asserts::assert_only_self;
+    use controller::utils::asserts::assert_only_self;
     use core::array::ArrayTrait;
     use starknet::{get_block_timestamp, get_contract_address, ContractAddress, account::Call};
     use super::{IThresholdRecoveryInternal, IToggleThresholdRecovery};
@@ -59,10 +59,10 @@ mod threshold_recovery_component {
             ref self: ComponentState<TContractState>, target_signers: Array<Signer>, new_signers: Array<Signer>
         ) {
             assert_only_self();
-            assert(target_signers.len() == 1 && new_signers.len() == 1, 'argent/invalid-escape-length');
+            assert(target_signers.len() == 1 && new_signers.len() == 1, 'ctrl/invalid-escape-length');
 
             let escape_config: EscapeEnabled = self.escape_enabled.read();
-            assert(escape_config.is_enabled, 'argent/escape-disabled');
+            assert(escape_config.is_enabled, 'ctrl/escape-disabled');
 
             let target_signer_guid = (*target_signers[0]).into_guid();
             let new_signer_guid = (*new_signers[0]).into_guid();
@@ -76,7 +76,7 @@ mod threshold_recovery_component {
                 let current_escaped_signer = *current_escape.target_signers.at(0);
                 assert(
                     self.get_contract().is_signer_before(current_escaped_signer, target_signer_guid),
-                    'argent/cannot-override-escape'
+                    'ctrl/cannot-override-escape'
                 );
             }
             let ready_at = get_block_timestamp() + escape_config.security_period;
@@ -102,7 +102,7 @@ mod threshold_recovery_component {
             let current_escape = self.escape.read();
             let escape_config = self.escape_enabled.read();
             let current_escape_status = self.get_escape_status(current_escape.ready_at, escape_config.expiry_period);
-            assert(current_escape_status == EscapeStatus::Ready, 'argent/invalid-escape');
+            assert(current_escape_status == EscapeStatus::Ready, 'ctrl/invalid-escape');
 
             // replace signer
             let target_signer_guid = *current_escape.target_signers.at(0);
@@ -130,7 +130,7 @@ mod threshold_recovery_component {
             let current_escape = self.escape.read();
             let escape_config = self.escape_enabled.read();
             let current_escape_status = self.get_escape_status(current_escape.ready_at, escape_config.expiry_period);
-            assert(current_escape_status != EscapeStatus::None, 'argent/invalid-escape');
+            assert(current_escape_status != EscapeStatus::None, 'ctrl/invalid-escape');
             self.escape.write(Escape { ready_at: 0, target_signers: array![], new_signers: array![] });
             if current_escape_status != EscapeStatus::Expired {
                 let target_signers = current_escape.target_signers.span();
@@ -167,15 +167,15 @@ mod threshold_recovery_component {
             let current_escape_status = self.get_escape_status(current_escape.ready_at, escape_config.expiry_period);
             assert(
                 current_escape.target_signers.len() == 0 || current_escape_status == EscapeStatus::Expired,
-                'argent/ongoing-escape'
+                'ctrl/ongoing-escape'
             );
 
             if is_enabled {
-                assert(security_period != 0 && expiry_period != 0, 'argent/invalid-escape-params');
+                assert(security_period != 0 && expiry_period != 0, 'ctrl/invalid-escape-params');
                 self.escape_enabled.write(EscapeEnabled { is_enabled: true, security_period, expiry_period });
             } else {
-                assert(escape_config.is_enabled, 'argent/escape-disabled');
-                assert(security_period == 0 && expiry_period == 0, 'argent/invalid-escape-params');
+                assert(escape_config.is_enabled, 'ctrl/escape-disabled');
+                assert(security_period == 0 && expiry_period == 0, 'ctrl/invalid-escape-params');
                 self.escape_enabled.write(EscapeEnabled { is_enabled: false, security_period, expiry_period });
             }
         }
@@ -196,19 +196,19 @@ mod threshold_recovery_component {
                 if selector == selector!("trigger_escape_signer") {
                     // check we can do recovery
                     let escape_config: EscapeEnabled = self.escape_enabled.read();
-                    assert(escape_config.is_enabled && threshold > 1, 'argent/recovery-unavailable');
+                    assert(escape_config.is_enabled && threshold > 1, 'ctrl/recovery-unavailable');
                     // get escaped signer
-                    let escaped_signer: Signer = Serde::deserialize(ref calldata).expect('argent/invalid-calldata');
+                    let escaped_signer: Signer = Serde::deserialize(ref calldata).expect('ctrl/invalid-calldata');
                     let escaped_signer_guid = escaped_signer.into_guid();
                     // check it is a valid signer
                     let is_signer = self.get_contract().is_signer_in_list(escaped_signer_guid);
-                    assert(is_signer, 'argent/escaped-not-signer');
+                    assert(is_signer, 'ctrl/escaped-not-signer');
                     // return
                     return Option::Some((threshold - 1, escaped_signer_guid));
                 } else if selector == selector!("escape_signer") {
                     // check we can do recovery
                     let escape_config: EscapeEnabled = self.escape_enabled.read();
-                    assert(escape_config.is_enabled && threshold > 1, 'argent/recovery-unavailable');
+                    assert(escape_config.is_enabled && threshold > 1, 'ctrl/recovery-unavailable');
                     // get escaped signer
                     let current_escape: Escape = self.escape.read();
                     let escaped_signer_guid = *current_escape.target_signers.at(0);

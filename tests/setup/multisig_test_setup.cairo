@@ -1,6 +1,6 @@
-use argent::account::interface::Version;
-use argent::presets::multisig_account::ArgentMultisigAccount;
-use argent::signer::signer_signature::{Signer, SignerSignature, StarknetSigner, starknet_signer_from_pubkey};
+use controller::account::interface::Version;
+use controller::presets::multisig_account::ControllerMultisigAccount;
+use controller::signer::signer_signature::{Signer, SignerSignature, StarknetSigner, starknet_signer_from_pubkey};
 use core::traits::TryInto;
 use snforge_std::{ContractClass, ContractClassTrait, DeclareResult, RevertedTransaction, declare, CheatSpan, cheat_caller_address};
 use starknet::ContractAddress;
@@ -9,13 +9,13 @@ use starknet::syscalls::deploy_syscall;
 use super::constants::MULTISIG_OWNER;
 
 #[starknet::interface]
-trait ITestArgentMultisig<TContractState> {
+trait ITestControllerMultisig<TContractState> {
     // IAccount
     fn __validate_declare__(self: @TContractState, class_hash: felt252) -> felt252;
     fn __validate__(ref self: TContractState, calls: Array<Call>) -> felt252;
     fn __execute__(ref self: TContractState, calls: Array<Call>) -> Array<Span<felt252>>;
     fn is_valid_signature(self: @TContractState, hash: felt252, signature: Array<felt252>) -> felt252;
-    // IArgentMultisig
+    // IControllerMultisig
     fn __validate_deploy__(
         self: @TContractState,
         class_hash: felt252,
@@ -41,7 +41,7 @@ trait ITestArgentMultisig<TContractState> {
     // IErc165
     fn supports_interface(self: @TContractState, interface_id: felt252) -> bool;
 
-    // IDeprecatedArgentMultisig
+    // IDeprecatedControllerMultisig
     fn getVersion(self: @TContractState) -> felt252;
     fn getName(self: @TContractState) -> felt252;
     fn supportsInterface(self: @TContractState, interface_id: felt252) -> felt252;
@@ -49,14 +49,14 @@ trait ITestArgentMultisig<TContractState> {
 }
 
 fn declare_multisig() -> ContractClass {
-    match declare("ArgentMultisigAccount") {
+    match declare("ControllerMultisigAccount") {
         Result::Ok(DeclareResult::Success(contract_class)) => contract_class,
         Result::Ok(DeclareResult::AlreadyDeclared(contract_class)) => contract_class,
         Result::Err(_) => assert(false, 'err delcaring multisg'),
     }
 }
 
-fn initialize_multisig() -> ITestArgentMultisigDispatcher {
+fn initialize_multisig() -> ITestControllerMultisigDispatcher {
     let threshold = 1;
     let signers_array = array![
         starknet_signer_from_pubkey(MULTISIG_OWNER(1).pubkey),
@@ -66,13 +66,13 @@ fn initialize_multisig() -> ITestArgentMultisigDispatcher {
     initialize_multisig_with(threshold, signers_array.span())
 }
 
-fn initialize_multisig_with_one_signer() -> ITestArgentMultisigDispatcher {
+fn initialize_multisig_with_one_signer() -> ITestControllerMultisigDispatcher {
     let threshold = 1;
     let signers_array = array![starknet_signer_from_pubkey(MULTISIG_OWNER(1).pubkey)];
     initialize_multisig_with(threshold, signers_array.span())
 }
 
-fn initialize_multisig_with(threshold: usize, mut signers: Span<Signer>) -> ITestArgentMultisigDispatcher {
+fn initialize_multisig_with(threshold: usize, mut signers: Span<Signer>) -> ITestControllerMultisigDispatcher {
     let class_hash = declare_multisig();
     let mut calldata = array![];
     threshold.serialize(ref calldata);
@@ -80,7 +80,7 @@ fn initialize_multisig_with(threshold: usize, mut signers: Span<Signer>) -> ITes
 
     let contract_address = class_hash.deploy(@calldata).expect('Multisig deployment fail');
 
-    // This will set the caller for subsequent calls (avoid 'argent/only-self')
+    // This will set the caller for subsequent calls (avoid 'ctrl/only-self')
     cheat_caller_address(contract_address, contract_address, CheatSpan::Indefinite(()));
-    ITestArgentMultisigDispatcher { contract_address }
+    ITestControllerMultisigDispatcher { contract_address }
 }

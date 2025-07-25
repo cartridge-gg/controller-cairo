@@ -1,4 +1,4 @@
-use argent::account::interface::Version;
+use controller::account::interface::Version;
 use starknet::ClassHash;
 #[starknet::interface]
 trait IUpgradeable<TContractState> {
@@ -10,7 +10,7 @@ trait IUpgradeable<TContractState> {
 
 #[starknet::interface]
 trait IUpgradableCallbackOld<TContractState> {
-    /// Called after upgrading when coming from old accounts (argent account < 0.4.0 and multisig < 0.2.0)
+    /// Called after upgrading when coming from old accounts (controller account < 0.4.0 and multisig < 0.2.0)
     /// @dev Logic to execute after an upgrade
     /// Can only be called by the account after a call to `upgrade`
     /// @param data Generic call data that can be passed to the function for future upgrade logic
