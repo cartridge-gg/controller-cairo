@@ -1,7 +1,7 @@
 #[starknet::component]
 mod delegate_account_component {
     use controller::delegate_account::interface::IDelegateAccount;
-    use controller::presets::controller_account::IAssertOwner;
+    use controller::account::interface::IAssertOwner;
 
     use starknet::{get_caller_address, ContractAddress};
 

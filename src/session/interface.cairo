@@ -1,7 +1,7 @@
-use controller::signer::signer_signature::SignerSignature;
 use poseidon::poseidon_hash_span;
 use starknet::account::Call;
 use starknet::{get_tx_info, get_contract_address, ContractAddress};
+use controller::signer::signer_signature::{SignerSignature, Signer};
 
 /// @notice Session struct that the owner and guardian has to sign to initiate a session
 /// @dev The hash of the session is also signed by the guardian (backend) and 
@@ -19,8 +19,6 @@ struct Session {
     session_key_guid: felt252,
     guardian_key_guid: felt252,
 }
-
-
 
 /// @notice Session Token struct contains the session struct, relevant signatures and merkle proofs
 /// @param session The session struct
@@ -60,30 +58,54 @@ enum Policy {
     TypedData: TypedData,
 }
 
+#[derive(Drop, Serde, Copy, PartialEq)]
+enum SessionState {
+    NotRegistered,
+    Revoked,
+    Validated: felt252,
+}
 
-/// This trait has to be implemented when using the component `session_component` (This is enforced by the compiler)
+#[generate_trait]
+impl SessionStateImpl of SessionStateTrait {
+    fn from_felt(felt: felt252) -> SessionState {
+        match felt {
+            0 => SessionState::NotRegistered,
+            1 => SessionState::Revoked,
+            _ => SessionState::Validated(felt),
+        }
+    }
+    fn into_felt(self: SessionState) -> felt252 {
+        match self {
+            SessionState::NotRegistered => 0,
+            SessionState::Revoked => 1,
+            SessionState::Validated(hash) => hash,
+        }
+    }
+}
+
+#[starknet::interface]
+trait ISession<TContractState> {
+    fn revoke_session(ref self: TContractState, session_hash: felt252);
+    fn register_session(ref self: TContractState, session: Session, guid_or_address: felt252);
+    fn is_session_revoked(self: @TContractState, session_hash: felt252) -> bool;
+    fn is_session_registered(
+        self: @TContractState, session_hash: felt252, guid_or_address: felt252,
+    ) -> bool;
+    fn is_session_signature_valid(
+        self: @TContractState, data: Span<TypedData>, token: SessionToken,
+    ) -> bool;
+}
+
 #[starknet::interface]
 trait ISessionCallback<TContractState> {
-    /// @notice Callback performed to parse and validate account signature
-    /// @param session_hash The hash of session
-    /// @param authorization_signature The owner + guardian signature of the session
-    /// @return The parsed array of SignerSignature
-    fn parse_and_verify_authorization(
-        self: @TContractState, session_hash: felt252, authorization_signature: Span<felt252>
+    fn parse_authorization(
+        self: @TContractState, authorization_signature: Span<felt252>,
     ) -> Array<SignerSignature>;
+    fn is_valid_authorizer(self: @TContractState, guid_or_address: felt252) -> bool;
+    fn verify_authorization(
+        self: @TContractState,
+        session_hash: felt252,
+        authorization_signature: Span<SignerSignature>,
+    );
 }
 
-#[starknet::interface]
-trait ISessionable<TContractState> {
-    /// @notice This function allows user to revoke a session based on its hash
-    /// @param session_hash Hash of the session token
-    fn revoke_session(ref self: TContractState, session_hash: felt252);
-
-    /// @notice View function to see if a session is revoked, returns a boolean 
-    fn is_session_revoked(self: @TContractState, session_hash: felt252) -> bool;
-
-    /// @notice View function to see if a session authorization is cached
-    /// @param session_hash Hash of the session token
-    /// @return Whether the session is cached
-    fn is_session_authorization_cached(self: @TContractState, session_hash: felt252) -> bool;
-}

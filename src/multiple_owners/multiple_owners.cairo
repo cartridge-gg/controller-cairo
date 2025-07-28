@@ -12,7 +12,7 @@ mod multiple_owners_component {
     };
 
     use controller::multiple_owners::interface::IMultipleOwners;
-    use controller::presets::controller_account::IAssertOwner;
+    use controller::account::interface::IAssertOwner;
 
     #[storage]
     struct Storage {

@@ -3,7 +3,7 @@ mod external_owners_component {
     use starknet::{get_caller_address, get_contract_address, ContractAddress, storage::Map};
 
     use controller::external_owners::interface::IExternalOwners;
-    use controller::presets::controller_account::IAssertOwner;
+    use controller::account::interface::IAssertOwner;
 
     #[storage]
     struct Storage {

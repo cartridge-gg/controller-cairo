@@ -107,8 +107,6 @@ First release using Cairo 2
 - Outside execution: A new feature to allows metatransactions by leveraging offchain signatures
 - This account can only declare Cairo 1 contracts, not allowed to declare Cairo 0 code
 
-More details here https://www.notion.so/controllerhq/Starknet-Account-Cairo-1-Release-Notes-dd090b274a874dd4bc70f0da2b05b0f2
-
 # Older versions
 
 This changelog only contains changes starting from version 0.3.0
