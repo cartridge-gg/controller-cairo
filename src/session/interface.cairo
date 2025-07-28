@@ -1,10 +1,10 @@
+use controller::signer::signer_signature::{Signer, SignerSignature};
 use poseidon::poseidon_hash_span;
 use starknet::account::Call;
-use starknet::{get_tx_info, get_contract_address, ContractAddress};
-use controller::signer::signer_signature::{SignerSignature, Signer};
+use starknet::{ContractAddress, get_contract_address, get_tx_info};
 
 /// @notice Session struct that the owner and guardian has to sign to initiate a session
-/// @dev The hash of the session is also signed by the guardian (backend) and 
+/// @dev The hash of the session is also signed by the guardian (backend) and
 /// the dapp (session key) for every session tx (which may include multiple calls)
 /// @param expires_at Expiry timestamp of the session (seconds)
 /// @param allowed_methods_root The root of the merkle tree of the allowed methods
@@ -88,24 +88,16 @@ trait ISession<TContractState> {
     fn revoke_session(ref self: TContractState, session_hash: felt252);
     fn register_session(ref self: TContractState, session: Session, guid_or_address: felt252);
     fn is_session_revoked(self: @TContractState, session_hash: felt252) -> bool;
-    fn is_session_registered(
-        self: @TContractState, session_hash: felt252, guid_or_address: felt252,
-    ) -> bool;
-    fn is_session_signature_valid(
-        self: @TContractState, data: Span<TypedData>, token: SessionToken,
-    ) -> bool;
+    fn is_session_registered(self: @TContractState, session_hash: felt252, guid_or_address: felt252) -> bool;
+    fn is_session_signature_valid(self: @TContractState, data: Span<TypedData>, token: SessionToken) -> bool;
 }
 
 #[starknet::interface]
 trait ISessionCallback<TContractState> {
-    fn parse_authorization(
-        self: @TContractState, authorization_signature: Span<felt252>,
-    ) -> Array<SignerSignature>;
+    fn parse_authorization(self: @TContractState, authorization_signature: Span<felt252>) -> Array<SignerSignature>;
     fn is_valid_authorizer(self: @TContractState, guid_or_address: felt252) -> bool;
     fn verify_authorization(
-        self: @TContractState,
-        session_hash: felt252,
-        authorization_signature: Span<SignerSignature>,
+        self: @TContractState, session_hash: felt252, authorization_signature: Span<SignerSignature>,
     );
 }
 

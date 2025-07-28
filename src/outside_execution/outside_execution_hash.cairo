@@ -1,50 +1,38 @@
-use controller::offchain_message::{
-    interface::{
-        StarkNetDomain, StarknetDomain, StructHashStarkNetDomain, IOffChainMessageHashRev1,
-        IStructHashRev1
-    },
-    precalculated_hashing::get_message_hash_rev_1_with_precalc
+use controller::offchain_message::interface::{
+    IOffChainMessageHashRev1, IStructHashRev1, StarkNetDomain, StarknetDomain, StructHashStarkNetDomain,
 };
-use controller::outside_execution::interface::{OutsideExecution};
-use hash::{HashStateTrait, HashStateExTrait};
+use controller::offchain_message::precalculated_hashing::get_message_hash_rev_1_with_precalc;
+use controller::outside_execution::interface::OutsideExecution;
+use hash::{HashStateExTrait, HashStateTrait};
 use pedersen::PedersenTrait;
-use poseidon::{poseidon_hash_span, hades_permutation, HashState};
-use starknet::{get_tx_info, get_contract_address, account::Call};
+use poseidon::{HashState, hades_permutation, poseidon_hash_span};
+use starknet::account::Call;
+use starknet::{get_contract_address, get_tx_info};
 
-const MAINNET_FIRST_HADES_PERMUTATION: (felt252, felt252, felt252) =
-    (
-        996915192477314844232397706210079185628598843828924621070706959145689833980,
-        2154834376955455672602400038844399406202405733270731961376124532261347854986,
-        1129673910579930509220015777859527444962253764479830284363060876794734318472,
-    );
+const MAINNET_FIRST_HADES_PERMUTATION: (felt252, felt252, felt252) = (
+    996915192477314844232397706210079185628598843828924621070706959145689833980,
+    2154834376955455672602400038844399406202405733270731961376124532261347854986,
+    1129673910579930509220015777859527444962253764479830284363060876794734318472,
+);
 
-const SEPOLIA_FIRST_HADES_PERMUTATION: (felt252, felt252, felt252) =
-    (
-        2648373253270285159769360603517540536782489473878572730211506916518063798474,
-        604219299452944139991089465374505793098487122536238208890268251872611859633,
-        2075519913841617027120337084019352091900417009471098949739064814802390776233,
-    );
+const SEPOLIA_FIRST_HADES_PERMUTATION: (felt252, felt252, felt252) = (
+    2648373253270285159769360603517540536782489473878572730211506916518063798474,
+    604219299452944139991089465374505793098487122536238208890268251872611859633,
+    2075519913841617027120337084019352091900417009471098949739064814802390776233,
+);
 
-const OUTSIDE_EXECUTION_TYPE_HASH_REV_2: felt252 =
-    selector!(
-        "\"OutsideExecution\"(\"Caller\":\"ContractAddress\",\"Nonce\":\"(felt,u128)\",\"Execute After\":\"u128\",\"Execute Before\":\"u128\",\"Calls\":\"Call*\")\"Call\"(\"To\":\"ContractAddress\",\"Selector\":\"selector\",\"Calldata\":\"felt*\")"
-    );
+const OUTSIDE_EXECUTION_TYPE_HASH_REV_2: felt252 = selector!(
+    "\"OutsideExecution\"(\"Caller\":\"ContractAddress\",\"Nonce\":\"(felt,u128)\",\"Execute After\":\"u128\",\"Execute Before\":\"u128\",\"Calls\":\"Call*\")\"Call\"(\"To\":\"ContractAddress\",\"Selector\":\"selector\",\"Calldata\":\"felt*\")",
+);
 
-const CALL_TYPE_HASH_REV_2: felt252 =
-    selector!(
-        "\"Call\"(\"To\":\"ContractAddress\",\"Selector\":\"selector\",\"Calldata\":\"felt*\")"
-    );
+const CALL_TYPE_HASH_REV_2: felt252 = selector!(
+    "\"Call\"(\"To\":\"ContractAddress\",\"Selector\":\"selector\",\"Calldata\":\"felt*\")",
+);
 
 impl StructHashCallRev2 of IStructHashRev1<Call> {
     fn get_struct_hash_rev_1(self: @Call) -> felt252 {
         poseidon_hash_span(
-            array![
-                CALL_TYPE_HASH_REV_2,
-                (*self.to).into(),
-                *self.selector,
-                poseidon_hash_span(*self.calldata)
-            ]
-                .span()
+            array![CALL_TYPE_HASH_REV_2, (*self.to).into(), *self.selector, poseidon_hash_span(*self.calldata)].span(),
         )
     }
 }
@@ -57,7 +45,7 @@ impl StructHashOutsideExecutionRev2 of IStructHashRev1<OutsideExecution> {
 
         while let Option::Some(call) = calls_span.pop_front() {
             hashed_calls.append(call.get_struct_hash_rev_1());
-        };
+        }
 
         let (nonce_channel, nonce_mask) = self.nonce;
 
@@ -71,7 +59,7 @@ impl StructHashOutsideExecutionRev2 of IStructHashRev1<OutsideExecution> {
                 self.execute_before.into(),
                 poseidon_hash_span(hashed_calls.span()),
             ]
-                .span()
+                .span(),
         )
     }
 }
@@ -90,9 +78,7 @@ impl OffChainMessageOutsideExecutionRev2 of IOffChainMessageHashRev1<OutsideExec
         if chain_id == 'SN_SEPOLIA' {
             return get_message_hash_rev_1_with_precalc(SEPOLIA_FIRST_HADES_PERMUTATION, *self);
         }
-        let domain = StarknetDomain {
-            name: 'Account.execute_from_outside', version: 2, chain_id, revision: 2
-        };
+        let domain = StarknetDomain { name: 'Account.execute_from_outside', version: 2, chain_id, revision: 2 };
         poseidon_hash_span(
             array![
                 'StarkNet Message',
@@ -100,7 +86,7 @@ impl OffChainMessageOutsideExecutionRev2 of IOffChainMessageHashRev1<OutsideExec
                 get_contract_address().into(),
                 (*self).get_struct_hash_rev_1(),
             ]
-                .span()
+                .span(),
         )
     }
 }

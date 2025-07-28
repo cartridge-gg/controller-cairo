@@ -24,10 +24,8 @@ const EIP191_SIGNER_TYPE: felt252 = 'Eip191 Signer';
 const WEBAUTHN_SIGNER_TYPE: felt252 = 'Webauthn Signer';
 const SIWS_SIGNER_TYPE: felt252 = 'SIWS Signer';
 
-const SECP_256_R1_HALF: u256 = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
-    / 2;
-const SECP_256_K1_HALF: u256 = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
-    / 2;
+const SECP_256_R1_HALF: u256 = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551 / 2;
+const SECP_256_K1_HALF: u256 = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141 / 2;
 
 
 /// @notice The type of the signer that this version of the accounts supports
@@ -171,19 +169,12 @@ impl SignerTraitImpl of SignerTrait {
     fn into_guid(self: Signer) -> felt252 {
         match self {
             Signer::Starknet(signer) => poseidon_2(STARKNET_SIGNER_TYPE, signer.pubkey.into()),
-            Signer::Secp256k1(signer) => poseidon_2(
-                SECP256K1_SIGNER_TYPE, signer.pubkey_hash.address.into(),
-            ),
+            Signer::Secp256k1(signer) => poseidon_2(SECP256K1_SIGNER_TYPE, signer.pubkey_hash.address.into()),
             Signer::Secp256r1(signer) => {
                 let pubkey: u256 = signer.pubkey.into();
-                PoseidonTrait::new()
-                    .update_with(SECP256R1_SIGNER_TYPE)
-                    .update_with(pubkey)
-                    .finalize()
+                PoseidonTrait::new().update_with(SECP256R1_SIGNER_TYPE).update_with(pubkey).finalize()
             },
-            Signer::Eip191(signer) => poseidon_2(
-                EIP191_SIGNER_TYPE, signer.eth_address.address.into(),
-            ),
+            Signer::Eip191(signer) => poseidon_2(EIP191_SIGNER_TYPE, signer.eth_address.address.into()),
             Signer::Webauthn(signer) => {
                 let mut origin = signer.origin;
                 let rp_id_hash: u256 = signer.rp_id_hash.into();
@@ -210,20 +201,16 @@ impl SignerTraitImpl of SignerTrait {
                 signer_type: SignerType::Starknet, stored_value: signer.pubkey.into(),
             },
             Signer::Secp256k1(signer) => SignerStorageValue {
-                signer_type: SignerType::Secp256k1,
-                stored_value: signer.pubkey_hash.address.try_into().unwrap(),
+                signer_type: SignerType::Secp256k1, stored_value: signer.pubkey_hash.address.try_into().unwrap(),
             },
             Signer::Secp256r1 => SignerStorageValue {
-                signer_type: SignerType::Secp256r1,
-                stored_value: self.into_guid().try_into().unwrap(),
+                signer_type: SignerType::Secp256r1, stored_value: self.into_guid().try_into().unwrap(),
             },
             Signer::Eip191(signer) => SignerStorageValue {
-                signer_type: SignerType::Eip191,
-                stored_value: signer.eth_address.address.try_into().unwrap(),
+                signer_type: SignerType::Eip191, stored_value: signer.eth_address.address.try_into().unwrap(),
             },
             Signer::Webauthn => SignerStorageValue {
-                signer_type: SignerType::Webauthn,
-                stored_value: self.into_guid().try_into().unwrap(),
+                signer_type: SignerType::Webauthn, stored_value: self.into_guid().try_into().unwrap(),
             },
             Signer::SIWS => SignerStorageValue {
                 signer_type: SignerType::SIWS, stored_value: self.into_guid().try_into().unwrap(),
@@ -286,24 +273,16 @@ impl SignerSignatureImpl of SignerSignatureTrait {
     #[inline(always)]
     fn is_valid_signature(self: SignerSignature, hash: felt252) -> bool {
         match self {
-            SignerSignature::Starknet((
-                signer, signature,
-            )) => is_valid_starknet_signature(hash, signer, signature),
+            SignerSignature::Starknet((signer, signature)) => is_valid_starknet_signature(hash, signer, signature),
             SignerSignature::Secp256k1((
                 signer, signature,
             )) => is_valid_secp256k1_signature(hash.into(), signer.pubkey_hash.into(), signature),
             SignerSignature::Secp256r1((
                 signer, signature,
             )) => is_valid_secp256r1_signature(hash.into(), signer, signature),
-            SignerSignature::Eip191((
-                signer, signature,
-            )) => is_valid_eip191_signature(hash, signer, signature),
-            SignerSignature::Webauthn((
-                signer, signature,
-            )) => is_valid_webauthn_signature(hash, signer, signature),
-            SignerSignature::SIWS((
-                signer, signature,
-            )) => is_valid_siws_signature(hash, signer, signature),
+            SignerSignature::Eip191((signer, signature)) => is_valid_eip191_signature(hash, signer, signature),
+            SignerSignature::Webauthn((signer, signature)) => is_valid_webauthn_signature(hash, signer, signature),
+            SignerSignature::SIWS((signer, signature)) => is_valid_siws_signature(hash, signer, signature),
         }
     }
     #[inline(always)]
@@ -355,44 +334,33 @@ impl U256TryIntoSignerType of TryInto<u256, SignerType> {
 }
 
 #[inline(always)]
-fn is_valid_starknet_signature(
-    hash: felt252, signer: StarknetSigner, signature: StarknetSignature,
-) -> bool {
+fn is_valid_starknet_signature(hash: felt252, signer: StarknetSigner, signature: StarknetSignature) -> bool {
     check_ecdsa_signature(hash, signer.pubkey.into(), signature.r, signature.s)
 }
 
 #[inline(always)]
-fn is_valid_secp256k1_signature(
-    hash: u256, pubkey_hash: EthAddress, signature: Secp256Signature,
-) -> bool {
+fn is_valid_secp256k1_signature(hash: u256, pubkey_hash: EthAddress, signature: Secp256Signature) -> bool {
     assert(signature.s <= SECP_256_K1_HALF, 'ctrl/malleable-signature');
     is_eth_signature_valid(hash, signature, pubkey_hash).is_ok()
 }
 
 #[inline(always)]
-fn is_valid_secp256r1_signature(
-    hash: u256, signer: Secp256r1Signer, signature: Secp256Signature,
-) -> bool {
+fn is_valid_secp256r1_signature(hash: u256, signer: Secp256r1Signer, signature: Secp256Signature) -> bool {
     // `recover_public_key` accepts invalid values for r and s, so we need to check them first
     assert(is_signature_entry_valid::<Secp256r1Point>(signature.r), 'ctrl/invalid-r-value');
     assert(is_signature_entry_valid::<Secp256r1Point>(signature.s), 'ctrl/invalid-s-value');
     assert(signature.s <= SECP_256_R1_HALF, 'ctrl/malleable-signature');
-    let recovered = recover_public_key::<Secp256r1Point>(hash, signature)
-        .expect('ctrl/invalid-sig-format');
+    let recovered = recover_public_key::<Secp256r1Point>(hash, signature).expect('ctrl/invalid-sig-format');
     let (recovered_signer, _) = recovered.get_coordinates().expect('ctrl/invalid-sig-format');
     recovered_signer == signer.pubkey.into()
 }
 
 #[inline(always)]
-fn is_valid_webauthn_signature(
-    hash: felt252, signer: WebauthnSigner, signature: WebauthnSignature,
-) -> bool {
+fn is_valid_webauthn_signature(hash: felt252, signer: WebauthnSigner, signature: WebauthnSignature) -> bool {
     verify_authenticator_flags(signature.flags);
 
     let signed_hash = get_webauthn_hash(hash, signer, signature);
-    is_valid_secp256r1_signature(
-        signed_hash, Secp256r1Signer { pubkey: signer.pubkey }, signature.ec_signature,
-    )
+    is_valid_secp256r1_signature(signed_hash, Secp256r1Signer { pubkey: signer.pubkey }, signature.ec_signature)
 }
 
 trait SignerSpanTrait {

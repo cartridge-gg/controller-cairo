@@ -2,20 +2,16 @@
 // This is achieved by adding outside_execution::ERC165_OUTSIDE_EXECUTION_INTERFACE_ID
 #[starknet::component]
 mod outside_execution_component {
-    use controller::outside_execution::{
-        outside_execution_hash::{OffChainMessageOutsideExecutionRev2},
-        interface::{OutsideExecution, IOutsideExecutionCallback, IOutsideExecution}
-    };
-    use hash::{HashStateTrait, HashStateExTrait};
-    use openzeppelin::security::reentrancyguard::{
-        ReentrancyGuardComponent, ReentrancyGuardComponent::InternalImpl
-    };
-    use pedersen::PedersenTrait;
-    use starknet::{
-        get_caller_address, get_contract_address, get_block_timestamp, get_tx_info, account::Call,
-        storage::Map, StorePacking
-    };
+    use controller::outside_execution::interface::{IOutsideExecution, IOutsideExecutionCallback, OutsideExecution};
+    use controller::outside_execution::outside_execution_hash::OffChainMessageOutsideExecutionRev2;
     use core::integer::bitwise;
+    use hash::{HashStateExTrait, HashStateTrait};
+    use openzeppelin::security::reentrancyguard::ReentrancyGuardComponent;
+    use openzeppelin::security::reentrancyguard::ReentrancyGuardComponent::InternalImpl;
+    use pedersen::PedersenTrait;
+    use starknet::account::Call;
+    use starknet::storage::Map;
+    use starknet::{StorePacking, get_block_timestamp, get_caller_address, get_contract_address, get_tx_info};
 
     #[storage]
     struct Storage {
@@ -36,23 +32,19 @@ mod outside_execution_component {
         impl ReentrancyGuard: ReentrancyGuardComponent::HasComponent<TContractState>,
     > of IOutsideExecution<ComponentState<TContractState>> {
         fn execute_from_outside_v3(
-            ref self: ComponentState<TContractState>,
-            outside_execution: OutsideExecution,
-            signature: Span<felt252>
+            ref self: ComponentState<TContractState>, outside_execution: OutsideExecution, signature: Span<felt252>,
         ) -> Array<Span<felt252>> {
             let hash = outside_execution.get_message_hash_rev_1();
             self.assert_valid_outside_execution(outside_execution, hash, signature)
         }
 
         fn get_outside_execution_message_hash_rev_2(
-            self: @ComponentState<TContractState>, outside_execution: OutsideExecution
+            self: @ComponentState<TContractState>, outside_execution: OutsideExecution,
         ) -> felt252 {
             outside_execution.get_message_hash_rev_1()
         }
 
-        fn is_valid_outside_execution_v3_nonce(
-            self: @ComponentState<TContractState>, nonce: (felt252, u128)
-        ) -> bool {
+        fn is_valid_outside_execution_v3_nonce(self: @ComponentState<TContractState>, nonce: (felt252, u128)) -> bool {
             let (channel, mask) = nonce;
             if mask == 0_u128 {
                 return false;
@@ -62,9 +54,7 @@ mod outside_execution_component {
             (current_mask & mask) == 0
         }
 
-        fn get_outside_execution_v3_channel_nonce(
-            self: @ComponentState<TContractState>, channel: felt252
-        ) -> u128 {
+        fn get_outside_execution_v3_channel_nonce(self: @ComponentState<TContractState>, channel: felt252) -> u128 {
             self.outside_nonces.read(channel)
         }
     }
@@ -81,7 +71,7 @@ mod outside_execution_component {
             ref self: ComponentState<TContractState>,
             outside_execution: OutsideExecution,
             outside_tx_hash: felt252,
-            signature: Span<felt252>
+            signature: Span<felt252>,
         ) -> Array<Span<felt252>> {
             let mut reentrancy_guard = get_dep_component_mut!(ref self, ReentrancyGuard);
             reentrancy_guard.start();
@@ -92,9 +82,8 @@ mod outside_execution_component {
 
             let block_timestamp = get_block_timestamp();
             assert(
-                outside_execution.execute_after < block_timestamp
-                    && block_timestamp < outside_execution.execute_before,
-                'ctrl/invalid-timestamp'
+                outside_execution.execute_after < block_timestamp && block_timestamp < outside_execution.execute_before,
+                'ctrl/invalid-timestamp',
             );
             let (channel, mask) = outside_execution.nonce;
             let current_mask = self.outside_nonces.read(channel);
@@ -102,8 +91,7 @@ mod outside_execution_component {
             assert(mask != 0 && and == 0, 'ctrl/invalid-outside-nonce');
             self.outside_nonces.write(channel, or);
             let mut state = self.get_contract_mut();
-            let result = state
-                .execute_from_outside_callback(outside_execution.calls, outside_tx_hash, signature);
+            let result = state.execute_from_outside_callback(outside_execution.calls, outside_tx_hash, signature);
             reentrancy_guard.end();
             result
         }

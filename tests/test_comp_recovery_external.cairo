@@ -12,8 +12,8 @@ use controller::signer_storage::signer_list::signer_list_component;
 use controller::utils::serialization::serialize;
 use core::traits::TryInto;
 use snforge_std::{
-    CheatSpan, ContractClass, ContractClassTrait, EventAssertions, EventFetcher, EventSpy, SpyOn, declare, spy_events,
-    cheat_caller_address, cheat_block_timestamp, stop_prank, test_address, EventSpyAssertionsTrait
+    CheatSpan, ContractClass, ContractClassTrait, EventAssertions, EventFetcher, EventSpy, EventSpyAssertionsTrait,
+    SpyOn, cheat_block_timestamp, cheat_caller_address, declare, spy_events, stop_prank, test_address,
 };
 use starknet::{ContractAddress, SyscallResultTrait, deploy_syscall};
 use super::setup::constants::MULTISIG_OWNER;

@@ -1,12 +1,10 @@
 use controller::account::interface::{
-    SRC5_ACCOUNT_INTERFACE_ID, SRC5_ACCOUNT_INTERFACE_ID_OLD_1, SRC5_ACCOUNT_INTERFACE_ID_OLD_2
+    SRC5_ACCOUNT_INTERFACE_ID, SRC5_ACCOUNT_INTERFACE_ID_OLD_1, SRC5_ACCOUNT_INTERFACE_ID_OLD_2,
 };
-use controller::introspection::interface::ISRC5;
-use controller::introspection::interface::ISRC5Legacy;
-use controller::introspection::interface::{SRC5_INTERFACE_ID, SRC5_INTERFACE_ID_OLD};
+use controller::introspection::interface::{ISRC5, ISRC5Legacy, SRC5_INTERFACE_ID, SRC5_INTERFACE_ID_OLD};
 use controller::introspection::src5::src5_component;
 use controller::mocks::src5_mocks::SRC5Mock;
-use controller::outside_execution::interface::{ERC165_OUTSIDE_EXECUTION_INTERFACE_ID_REV_2};
+use controller::outside_execution::interface::ERC165_OUTSIDE_EXECUTION_INTERFACE_ID_REV_2;
 
 const UNSUPORTED_INTERFACE_ID: felt252 = 0xffffffff;
 
@@ -24,14 +22,8 @@ fn COMPONENT_STATE() -> ComponentState {
 fn test_introspection_account_id() {
     let mut component = COMPONENT_STATE();
     assert!(component.supports_interface(SRC5_ACCOUNT_INTERFACE_ID), "should support account");
-    assert!(
-        component.supports_interface(SRC5_ACCOUNT_INTERFACE_ID_OLD_1),
-        "should support account old 1"
-    );
-    assert!(
-        component.supports_interface(SRC5_ACCOUNT_INTERFACE_ID_OLD_2),
-        "should support account old 2"
-    );
+    assert!(component.supports_interface(SRC5_ACCOUNT_INTERFACE_ID_OLD_1), "should support account old 1");
+    assert!(component.supports_interface(SRC5_ACCOUNT_INTERFACE_ID_OLD_2), "should support account old 2");
 }
 
 #[test]
@@ -44,9 +36,7 @@ fn test_introspection_src5_id() {
 #[test]
 fn test_introspection_outside_execution_id() {
     let mut component = COMPONENT_STATE();
-    assert!(
-        component.supports_interface(ERC165_OUTSIDE_EXECUTION_INTERFACE_ID_REV_2), "should support"
-    );
+    assert!(component.supports_interface(ERC165_OUTSIDE_EXECUTION_INTERFACE_ID_REV_2), "should support");
 }
 
 #[test]
@@ -59,23 +49,11 @@ fn test_unsuported_interface_id() {
 fn test_introspection_legacy_method() {
     let mut component = COMPONENT_STATE();
     assert_eq!(component.supportsInterface(SRC5_ACCOUNT_INTERFACE_ID), 1, "should support account");
-    assert_eq!(
-        component.supportsInterface(SRC5_ACCOUNT_INTERFACE_ID_OLD_1),
-        1,
-        "should support account old 1"
-    );
-    assert_eq!(
-        component.supportsInterface(SRC5_ACCOUNT_INTERFACE_ID_OLD_2),
-        1,
-        "should support account old 2"
-    );
+    assert_eq!(component.supportsInterface(SRC5_ACCOUNT_INTERFACE_ID_OLD_1), 1, "should support account old 1");
+    assert_eq!(component.supportsInterface(SRC5_ACCOUNT_INTERFACE_ID_OLD_2), 1, "should support account old 2");
     assert_eq!(component.supportsInterface(SRC5_INTERFACE_ID), 1, "should support src5");
     assert_eq!(component.supportsInterface(SRC5_INTERFACE_ID_OLD), 1, "should support src5 old");
-    assert_eq!(
-        component.supportsInterface(ERC165_OUTSIDE_EXECUTION_INTERFACE_ID_REV_2),
-        1,
-        "should support"
-    );
+    assert_eq!(component.supportsInterface(ERC165_OUTSIDE_EXECUTION_INTERFACE_ID_REV_2), 1, "should support");
     assert_eq!(component.supportsInterface(UNSUPORTED_INTERFACE_ID), 0, "should not support");
 }
 

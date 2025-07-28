@@ -1,9 +1,8 @@
 #[starknet::component]
 mod delegate_account_component {
-    use controller::delegate_account::interface::IDelegateAccount;
     use controller::account::interface::IAssertOwner;
-
-    use starknet::{get_caller_address, ContractAddress};
+    use controller::delegate_account::interface::IDelegateAccount;
+    use starknet::{ContractAddress, get_caller_address};
 
     #[storage]
     struct Storage {
@@ -23,14 +22,9 @@ mod delegate_account_component {
 
     #[embeddable_as(DelegateAccountImpl)]
     impl ImplDelegateAccount<
-        TContractState,
-        +HasComponent<TContractState>,
-        +IAssertOwner<TContractState>,
-        +Drop<TContractState>
+        TContractState, +HasComponent<TContractState>, +IAssertOwner<TContractState>, +Drop<TContractState>,
     > of IDelegateAccount<ComponentState<TContractState>> {
-        fn set_delegate_account(
-            ref self: ComponentState<TContractState>, delegate_address: ContractAddress
-        ) {
+        fn set_delegate_account(ref self: ComponentState<TContractState>, delegate_address: ContractAddress) {
             self.get_contract().assert_owner();
 
             self.delegate_account.write(delegate_address.into());

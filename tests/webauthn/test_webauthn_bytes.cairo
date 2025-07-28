@@ -1,5 +1,5 @@
 use controller::utils::bytes::{
-    SpanU8TryIntoFelt252, SpanU8TryIntoU256, ByteArrayExt, u8s_to_u32s_pad_end, u32s_to_u8s, u256_to_u8s
+    ByteArrayExt, SpanU8TryIntoFelt252, SpanU8TryIntoU256, u256_to_u8s, u32s_to_u8s, u8s_to_u32s_pad_end,
 };
 
 #[test]
@@ -91,7 +91,7 @@ fn convert_bytes_to_felt252_overflow() {
 
 #[test]
 fn convert_bytes_to_felt252() {
-    let bytes = array![222, 173, 190, 239,];
+    let bytes = array![222, 173, 190, 239];
     let value: felt252 = bytes.span().try_into().unwrap();
     assert_eq!(value, 0xdeadbeef, "invalid");
 

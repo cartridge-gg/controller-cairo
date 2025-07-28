@@ -10,26 +10,7 @@ fn test_siws_signature_validation() {
 
     let pubkey: u256 = 0x76e70af44d520a839a44156248699346911e4a87efd153df694ef4a188a60c5b;
     let domain: Span<u8> = array![
-        'h',
-        't',
-        't',
-        'p',
-        's',
-        ':',
-        '/',
-        '/',
-        'c',
-        'a',
-        'r',
-        't',
-        'r',
-        'i',
-        'd',
-        'g',
-        'e',
-        '.',
-        'g',
-        'g',
+        'h', 't', 't', 'p', 's', ':', '/', '/', 'c', 'a', 'r', 't', 'r', 'i', 'd', 'g', 'e', '.', 'g', 'g',
     ]
         .span();
     let hash: felt252 = 0x3d12d63bd7c309c264802ea127085b8ccd0b25e256311352c9b975c6e9977f3;

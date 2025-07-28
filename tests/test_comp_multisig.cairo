@@ -1,11 +1,10 @@
 use controller::mocks::multisig_mocks::MultisigMock;
-use controller::multisig::interface::IControllerMultisig;
-use controller::multisig::interface::IControllerMultisigInternal;
+use controller::multisig::interface::{IControllerMultisig, IControllerMultisigInternal};
 use controller::multisig::multisig::multisig_component;
-use controller::signer::{signer_signature::{Signer, StarknetSigner, starknet_signer_from_pubkey, SignerTrait}};
+use controller::signer::signer_signature::{Signer, SignerTrait, StarknetSigner, starknet_signer_from_pubkey};
 use controller::signer_storage::signer_list::signer_list_component;
 use snforge_std::{CheatSpan, cheat_caller_address, test_address};
-use super::setup::constants::{MULTISIG_OWNER};
+use super::setup::constants::MULTISIG_OWNER;
 
 type ComponentState = multisig_component::ComponentState<MultisigMock::ContractState>;
 
@@ -93,7 +92,7 @@ fn test_change_threshold_same() {
     component.change_threshold(2);
 }
 
-// Add signers 
+// Add signers
 
 #[test]
 fn test_add_1_signer_same_threshold() {

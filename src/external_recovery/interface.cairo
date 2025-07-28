@@ -7,21 +7,21 @@ use starknet::ContractAddress;
 #[derive(Drop, Serde, Copy, starknet::Store)]
 struct Escape {
     ready_at: u64,
-    call_hash: felt252
+    call_hash: felt252,
 }
 
 /// @notice The call to be performed once the escape is Ready
 #[derive(Drop, Serde)]
 struct EscapeCall {
     selector: felt252,
-    calldata: Array<felt252>
+    calldata: Array<felt252>,
 }
 
 #[starknet::interface]
 trait IExternalRecovery<TContractState> {
     /// @notice Enables/Disables recovery and sets the recovery parameters
     fn toggle_escape(
-        ref self: TContractState, is_enabled: bool, security_period: u64, expiry_period: u64, guardian: ContractAddress
+        ref self: TContractState, is_enabled: bool, security_period: u64, expiry_period: u64, guardian: ContractAddress,
     );
     fn get_guardian(self: @TContractState) -> ContractAddress;
     /// @notice Triggers the escape
@@ -53,14 +53,14 @@ struct EscapeTriggered {
 /// @param call_hash hash of the executed EscapeCall
 #[derive(Drop, starknet::Event)]
 struct EscapeExecuted {
-    call_hash: felt252
+    call_hash: felt252,
 }
 
 /// @notice Signer escape was canceled
 /// @param call_hash hash of EscapeCall
 #[derive(Drop, starknet::Event)]
 struct EscapeCanceled {
-    call_hash: felt252
+    call_hash: felt252,
 }
 
 impl DefaultEscape of Default<Escape> {

@@ -1,19 +1,18 @@
-/// @notice Implements the methods of a multisig such as 
+/// @notice Implements the methods of a multisig such as
 /// adding or removing signers, changing the threshold, etc
 #[starknet::component]
 mod multisig_component {
     use controller::multisig::interface::{IControllerMultisig, IControllerMultisigInternal};
-    use controller::signer::{
-        signer_signature::{Signer, SignerTrait, SignerSignature, SignerSignatureTrait, SignerSpanTrait},
+    use controller::signer::signer_signature::{
+        Signer, SignerSignature, SignerSignatureTrait, SignerSpanTrait, SignerTrait,
     };
-    use controller::signer_storage::{
-        interface::ISignerList,
-        signer_list::{
-            signer_list_component,
-            signer_list_component::{OwnerAddedGuid, OwnerRemovedGuid, SignerLinked, SignerListInternalImpl}
-        }
+    use controller::signer_storage::interface::ISignerList;
+    use controller::signer_storage::signer_list::signer_list_component;
+    use controller::signer_storage::signer_list::signer_list_component::{
+        OwnerAddedGuid, OwnerRemovedGuid, SignerLinked, SignerListInternalImpl,
     };
-    use controller::utils::{transaction_version::is_estimate_transaction, asserts::assert_only_self};
+    use controller::utils::asserts::assert_only_self;
+    use controller::utils::transaction_version::is_estimate_transaction;
 
     /// Too many owners could make the multisig unable to process transactions if we reach a limit
     const MAX_SIGNERS_COUNT: usize = 32;
@@ -26,7 +25,7 @@ mod multisig_component {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        ThresholdUpdated: ThresholdUpdated
+        ThresholdUpdated: ThresholdUpdated,
     }
 
     /// @notice Emitted when the multisig threshold changes
@@ -41,7 +40,7 @@ mod multisig_component {
         TContractState,
         +HasComponent<TContractState>,
         impl SignerList: signer_list_component::HasComponent<TContractState>,
-        +Drop<TContractState>
+        +Drop<TContractState>,
     > of IControllerMultisig<ComponentState<TContractState>> {
         fn change_threshold(ref self: ComponentState<TContractState>, new_threshold: usize) {
             assert_only_self();
@@ -66,12 +65,11 @@ mod multisig_component {
             let mut guids = signers_to_add.span().to_guid_list();
             signer_list_comp.add_signers(guids.span(), last_signer: last_signer_guid);
             let mut signers_to_add_span = signers_to_add.span();
-            while let Option::Some(signer) = signers_to_add_span
-                .pop_front() {
-                    let signer_guid = guids.pop_front().unwrap();
-                    signer_list_comp.emit(OwnerAddedGuid { new_owner_guid: signer_guid });
-                    signer_list_comp.emit(SignerLinked { signer_guid, signer: *signer });
-                };
+            while let Option::Some(signer) = signers_to_add_span.pop_front() {
+                let signer_guid = guids.pop_front().unwrap();
+                signer_list_comp.emit(OwnerAddedGuid { new_owner_guid: signer_guid });
+                signer_list_comp.emit(SignerLinked { signer_guid, signer: *signer });
+            }
 
             self.threshold.write(new_threshold);
             if previous_threshold != new_threshold {
@@ -80,7 +78,7 @@ mod multisig_component {
         }
 
         fn remove_signers(
-            ref self: ComponentState<TContractState>, new_threshold: usize, signers_to_remove: Array<Signer>
+            ref self: ComponentState<TContractState>, new_threshold: usize, signers_to_remove: Array<Signer>,
         ) {
             assert_only_self();
             let mut signer_list_comp = get_dep_component_mut!(ref self, SignerList);
@@ -92,10 +90,9 @@ mod multisig_component {
 
             let mut guids = signers_to_remove.span().to_guid_list();
             signer_list_comp.remove_signers(guids.span(), last_signer: last_signer_guid);
-            while let Option::Some(removed_owner_guid) = guids
-                .pop_front() {
-                    signer_list_comp.emit(OwnerRemovedGuid { removed_owner_guid })
-                };
+            while let Option::Some(removed_owner_guid) = guids.pop_front() {
+                signer_list_comp.emit(OwnerRemovedGuid { removed_owner_guid })
+            }
 
             self.threshold.write(new_threshold);
             if previous_threshold != new_threshold {
@@ -134,7 +131,7 @@ mod multisig_component {
         }
 
         fn is_valid_signer_signature(
-            self: @ComponentState<TContractState>, hash: felt252, signer_signature: SignerSignature
+            self: @ComponentState<TContractState>, hash: felt252, signer_signature: SignerSignature,
         ) -> bool {
             let is_signer = self.get_contract().is_signer_in_list(signer_signature.signer().into_guid());
             assert(is_signer, 'ctrl/not-a-signer');
@@ -147,7 +144,7 @@ mod multisig_component {
         TContractState,
         +HasComponent<TContractState>,
         impl SignerList: signer_list_component::HasComponent<TContractState>,
-        +Drop<TContractState>
+        +Drop<TContractState>,
     > of IControllerMultisigInternal<ComponentState<TContractState>> {
         fn initialize(ref self: ComponentState<TContractState>, threshold: usize, mut signers: Array<Signer>) {
             assert(self.threshold.read() == 0, 'ctrl/already-initialized');
@@ -159,19 +156,18 @@ mod multisig_component {
             let mut guids = signers.span().to_guid_list();
             signer_list_comp.add_signers(guids.span(), last_signer: 0);
 
-            while let Option::Some(signer) = signers
-                .pop_front() {
-                    let signer_guid = guids.pop_front().unwrap();
-                    signer_list_comp.emit(OwnerAddedGuid { new_owner_guid: signer_guid });
-                    signer_list_comp.emit(SignerLinked { signer_guid, signer });
-                };
+            while let Option::Some(signer) = signers.pop_front() {
+                let signer_guid = guids.pop_front().unwrap();
+                signer_list_comp.emit(OwnerAddedGuid { new_owner_guid: signer_guid });
+                signer_list_comp.emit(SignerLinked { signer_guid, signer });
+            }
 
             self.threshold.write(threshold);
             self.emit(ThresholdUpdated { new_threshold: threshold });
         }
 
         fn assert_valid_threshold_and_signers_count(
-            self: @ComponentState<TContractState>, threshold: usize, signers_len: usize
+            self: @ComponentState<TContractState>, threshold: usize, signers_len: usize,
         ) {
             assert(threshold != 0, 'ctrl/invalid-threshold');
             assert(signers_len != 0, 'ctrl/invalid-signers-len');
@@ -187,14 +183,14 @@ mod multisig_component {
             self: @ComponentState<TContractState>,
             hash: felt252,
             threshold: u32,
-            mut signer_signatures: Array<SignerSignature>
+            mut signer_signatures: Array<SignerSignature>,
         ) -> bool {
             assert(signer_signatures.len() == threshold, 'ctrl/signature-invalid-length');
             let mut last_signer: u256 = 0;
             loop {
                 let signer_sig = match signer_signatures.pop_front() {
                     Option::Some(signer_sig) => signer_sig,
-                    Option::None => { break true; }
+                    Option::None => { break true; },
                 };
                 let signer_guid = signer_sig.signer().into_guid();
                 assert(self.is_signer_guid(signer_guid), 'ctrl/not-a-signer');

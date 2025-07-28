@@ -1,6 +1,7 @@
 use hash::{HashStateExTrait, HashStateTrait};
 use pedersen::PedersenTrait;
-use starknet::{ContractAddress, get_contract_address, get_tx_info, account::Call};
+use starknet::account::Call;
+use starknet::{ContractAddress, get_contract_address, get_tx_info};
 
 // Interface ID for revision 2 of the OutsideExecute interface
 // see https://github.com/starknet-io/SNIPs/blob/main/SNIPS/snip-9.md
@@ -22,7 +23,7 @@ struct OutsideExecution {
     nonce: (felt252, u128),
     execute_after: u64,
     execute_before: u64,
-    calls: Span<Call>
+    calls: Span<Call>,
 }
 
 /// @notice get_outside_execution_message_hash_rev_* is not part of the standard interface
@@ -35,7 +36,7 @@ trait IOutsideExecution<TContractState> {
     /// @notice This function does not allow reentrancy. A call to `__execute__` or
     /// `execute_from_outside` cannot trigger another nested transaction to `execute_from_outside`.
     fn execute_from_outside_v3(
-        ref self: TContractState, outside_execution: OutsideExecution, signature: Span<felt252>
+        ref self: TContractState, outside_execution: OutsideExecution, signature: Span<felt252>,
     ) -> Array<Span<felt252>>;
 
     /// Get the status of a given nonce, true if the nonce is available to use
@@ -43,9 +44,7 @@ trait IOutsideExecution<TContractState> {
 
     /// Get the message hash for some `OutsideExecution` rev 2 following Eip712. Can be used to know
     /// what needs to be signed
-    fn get_outside_execution_message_hash_rev_2(
-        self: @TContractState, outside_execution: OutsideExecution
-    ) -> felt252;
+    fn get_outside_execution_message_hash_rev_2(self: @TContractState, outside_execution: OutsideExecution) -> felt252;
 
     fn get_outside_execution_v3_channel_nonce(self: @TContractState, channel: felt252) -> u128;
 }
@@ -60,9 +59,6 @@ trait IOutsideExecutionCallback<TContractState> {
     /// @param signature The signature that the user gave for this transaction
     #[inline(always)]
     fn execute_from_outside_callback(
-        ref self: TContractState,
-        calls: Span<Call>,
-        outside_execution_hash: felt252,
-        signature: Span<felt252>,
+        ref self: TContractState, calls: Span<Call>, outside_execution_hash: felt252, signature: Span<felt252>,
     ) -> Array<Span<felt252>>;
 }

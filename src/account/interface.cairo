@@ -1,6 +1,6 @@
-use controller::recovery::interface::{LegacyEscape, EscapeStatus};
-use controller::signer::signer_signature::{Signer, SignerType, SignerSignature};
 use controller::presets::controller_account::ControllerAccount::Owner;
+use controller::recovery::interface::{EscapeStatus, LegacyEscape};
+use controller::signer::signer_signature::{Signer, SignerSignature, SignerType};
 use starknet::account::Call;
 
 const SRC5_ACCOUNT_INTERFACE_ID: felt252 = 0x2ceccef7f994940b3962a6c67e0ba4fcd37df7d131417c604f91e03caecc1cd;
@@ -20,9 +20,10 @@ trait IAccount<TContractState> {
     fn __execute__(ref self: TContractState, calls: Array<Call>) -> Array<Span<felt252>>;
 
     /// @notice Checks whether a given signature for a given hash is valid
-    /// @dev Warning: To guarantee the signature cannot be replayed in other accounts or other chains, the data hashed must be unique to the account and the chain.
-    /// This is true today for starknet transaction signatures and for SNIP-12 signatures but might not be true for other types of signatures
-    /// @param hash The hash of the data to sign
+    /// @dev Warning: To guarantee the signature cannot be replayed in other accounts or other chains, the data hashed
+    /// must be unique to the account and the chain.
+    /// This is true today for starknet transaction signatures and for SNIP-12 signatures but might not be true for
+    /// other types of signatures @param hash The hash of the data to sign
     /// @param signature The signature to validate
     /// @return The shortstring 'VALID' when the signature is valid, 0 if the signature doesn't match the hash
     /// @dev it can also panic if the signature is not in a valid format

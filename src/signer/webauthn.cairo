@@ -1,12 +1,12 @@
 use alexandria_encoding::base64::Base64UrlEncoder;
-use controller::signer::signer_signature::{WebauthnSigner};
+use controller::signer::signer_signature::WebauthnSigner;
 use controller::utils::array_ext::ArrayExtTrait;
 use controller::utils::bytes::{
-    SpanU8TryIntoU256, SpanU8TryIntoFelt252, u32s_to_u256, u32s_typed_to_u256, u32s_to_u8s,
-    u256_to_u8s, ArrayU8Ext, u256_to_byte_array, u32s_to_byte_array
+    ArrayU8Ext, SpanU8TryIntoFelt252, SpanU8TryIntoU256, u256_to_byte_array, u256_to_u8s, u32s_to_byte_array,
+    u32s_to_u256, u32s_to_u8s, u32s_typed_to_u256,
 };
-use starknet::secp256_trait::Signature;
 use core::sha256::compute_sha256_byte_array;
+use starknet::secp256_trait::Signature;
 
 /// @notice The webauthn signature that needs to be validated
 /// @param cross_origin From the client data JSON
@@ -48,9 +48,7 @@ fn verify_authenticator_flags(flags: u8) {
 /// {"type":"webauthn.get","challenge":"3q2-7_8","origin":"http://localhost:5173","crossOrigin":false}
 /// Spec: https://www.w3.org/TR/webauthn/#dictdef-collectedclientdata
 /// Encoding spec: https://www.w3.org/TR/webauthn/#clientdatajson-verification
-fn encode_client_data_json(
-    hash: felt252, signature: WebauthnSignature, origin: Span<u8>
-) -> Span<u8> {
+fn encode_client_data_json(hash: felt252, signature: WebauthnSignature, origin: Span<u8>) -> Span<u8> {
     let mut json = client_data_json_intro();
     json.append_all(encode_challenge(hash));
     json.append_all(array!['"', ',', '"', 'o', 'r', 'i', 'g', 'i', 'n', '"', ':', '"'].span());
@@ -127,6 +125,6 @@ fn client_data_json_intro() -> Array<u8> {
         'e',
         '"',
         ':',
-        '"'
+        '"',
     ]
 }

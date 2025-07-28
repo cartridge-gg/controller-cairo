@@ -1,37 +1,42 @@
-/// @dev 🚨 This smart contract is a mock implementation and is not meant for actual deployment or use in any live environment. It is solely for testing, educational, or demonstration purposes. Please refrain from relying on the functionality of this contract for any production. 🚨
+/// @dev 🚨 This smart contract is a mock implementation and is not meant for actual deployment or use in any live
+/// environment. It is solely for testing, educational, or demonstration purposes. Please refrain from relying on the
+/// functionality of this contract for any production. 🚨
 use controller::account::interface::{IAccount, IControllerAccount, Version};
-use controller::signer::{
-    signer_signature::{
-        Signer, SignerStorageValue, SignerType, StarknetSigner, StarknetSignature, SignerTrait, SignerStorageTrait,
-        SignerSignature, SignerSignatureTrait, starknet_signer_from_pubkey
-    }
+use controller::signer::signer_signature::{
+    Signer, SignerSignature, SignerSignatureTrait, SignerStorageTrait, SignerStorageValue, SignerTrait, SignerType,
+    StarknetSignature, StarknetSigner, starknet_signer_from_pubkey,
 };
 
 #[starknet::contract(account)]
 mod MockFutureControllerAccount {
     use controller::account::interface::{IAccount, IControllerAccount, Version};
     use controller::introspection::src5::src5_component;
-
-    use controller::signer::{
-        signer_signature::{
-            Signer, SignerStorageValue, SignerType, StarknetSigner, StarknetSignature, SignerTrait, SignerStorageTrait,
-            SignerSignature, SignerSignatureTrait, starknet_signer_from_pubkey
-        }
+    use controller::signer::signer_signature::{
+        Signer, SignerSignature, SignerSignatureTrait, SignerStorageTrait, SignerStorageValue, SignerTrait, SignerType,
+        StarknetSignature, StarknetSigner, starknet_signer_from_pubkey,
     };
-    use controller::upgrade::{upgrade::upgrade_component, interface::{IUpgradableCallback, IUpgradableCallbackOld}};
-    use controller::utils::{
-        asserts::{assert_no_self_call, assert_only_self}, calls::execute_multicall, serialization::full_deserialize,
-    };
+    use controller::upgrade::interface::{IUpgradableCallback, IUpgradableCallbackOld};
+    use controller::upgrade::upgrade::upgrade_component;
+    use controller::utils::asserts::{assert_no_self_call, assert_only_self};
+    use controller::utils::calls::execute_multicall;
+    use controller::utils::serialization::full_deserialize;
     use core::option::OptionTrait;
     use core::traits::TryInto;
     use hash::HashStateTrait;
     use pedersen::PedersenTrait;
-    use starknet::{
-        ClassHash, get_block_timestamp, get_contract_address, VALIDATED, replace_class_syscall, account::Call,
-        SyscallResultTrait, get_tx_info, get_execution_info, syscalls::storage_read_syscall,
-        storage_access::{storage_address_from_base_and_offset, storage_base_address_from_felt252, storage_write_syscall}
+    use starknet::account::Call;
+    use starknet::storage_access::{
+        storage_address_from_base_and_offset, storage_base_address_from_felt252, storage_write_syscall,
     };
-    use super::{IFutureControllerUserAccount, IFutureControllerUserAccountDispatcher, IFutureControllerUserAccountDispatcherTrait};
+    use starknet::syscalls::storage_read_syscall;
+    use starknet::{
+        ClassHash, SyscallResultTrait, VALIDATED, get_block_timestamp, get_contract_address, get_execution_info,
+        get_tx_info, replace_class_syscall,
+    };
+    use super::{
+        IFutureControllerUserAccount, IFutureControllerUserAccountDispatcher,
+        IFutureControllerUserAccountDispatcherTrait,
+    };
 
     const NAME: felt252 = 'ControllerAccount';
     const VERSION_MAJOR: u8 = 0;
@@ -133,7 +138,7 @@ mod MockFutureControllerAccount {
             class_hash: felt252,
             contract_address_salt: felt252,
             owner: Signer,
-            guardian: Option<Signer>
+            guardian: Option<Signer>,
         ) -> felt252 {
             let tx_info = get_tx_info().unbox();
             self.assert_valid_span_signature(tx_info.transaction_hash, self.parse_signature_array(tx_info.signature));
@@ -171,7 +176,7 @@ mod MockFutureControllerAccount {
         }
 
         fn is_valid_span_signature(
-            self: @ContractState, hash: felt252, signer_signatures: Array<SignerSignature>
+            self: @ContractState, hash: felt252, signer_signatures: Array<SignerSignature>,
         ) -> bool {
             if self._guardian.read() == 0 {
                 assert(signer_signatures.len() == 1, 'ctrl/invalid-signature-length');
@@ -217,7 +222,7 @@ trait IFutureControllerUserAccount<TContractState> {
         class_hash: felt252,
         contract_address_salt: felt252,
         owner: Signer,
-        guardian: Option<Signer>
+        guardian: Option<Signer>,
     ) -> felt252;
     fn get_owner(self: @TContractState) -> felt252;
     fn get_guardian(self: @TContractState) -> felt252;

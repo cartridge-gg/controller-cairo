@@ -1,28 +1,27 @@
-use starknet::account::Call;
+use alexandria_merkle_tree::merkle_tree::poseidon::PoseidonHasherImpl;
+use alexandria_merkle_tree::merkle_tree::{Hasher, MerkleTree, MerkleTreeTrait};
+use controller::session::interface::Policy;
+use controller::session::session_hash::MerkleLeafHashPolicy;
 use core::array::ArrayTrait;
-use alexandria_merkle_tree::merkle_tree::{
-    Hasher, MerkleTree, poseidon::PoseidonHasherImpl, MerkleTreeTrait,
-};
-use controller::session::{session_hash::MerkleLeafHashPolicy, interface::Policy};
+use starknet::account::Call;
 
 // Based on
 // https://github.com/argentlabs/starknet-plugin-account/blob/3c14770c3f7734ef208536d91bbd76af56dc2043/contracts/plugins/SessionKey.cairo
 #[starknet::component]
 mod session_component {
-    use core::poseidon::{hades_permutation, poseidon_hash_span};
-    use starknet::{account::Call, info::get_block_timestamp, get_contract_address, storage::Map};
-    use controller::session::interface::{Session, SessionToken, Policy, TypedData};
-    use controller::session::session_hash::{
-        StructHashSession, OffChainMessageHashSessionRev1, StructHashTypedData,
-    };
-    use controller::signer::signer_signature::{
-        Signer, SignerSignature, SignerType, SignerSignatureImpl, SignerTraitImpl,
-    };
-
-    use controller::utils::asserts::assert_no_self_call;
-    use controller::session::interface::{ISession, ISessionCallback};
-    use controller::session::session::check_policy;
     use controller::account::interface::IAssertOwner;
+    use controller::session::interface::{ISession, ISessionCallback, Policy, Session, SessionToken, TypedData};
+    use controller::session::session::check_policy;
+    use controller::session::session_hash::{OffChainMessageHashSessionRev1, StructHashSession, StructHashTypedData};
+    use controller::signer::signer_signature::{
+        Signer, SignerSignature, SignerSignatureImpl, SignerTraitImpl, SignerType,
+    };
+    use controller::utils::asserts::assert_no_self_call;
+    use core::poseidon::{hades_permutation, poseidon_hash_span};
+    use starknet::account::Call;
+    use starknet::get_contract_address;
+    use starknet::info::get_block_timestamp;
+    use starknet::storage::Map;
 
     const SESSION_MAGIC: felt252 = 'session-token';
     const WILDCARD_MAGIC: felt252 = 'wildcard-policy';
@@ -64,10 +63,7 @@ mod session_component {
 
     #[embeddable_as(SessionComponent)]
     impl SessionImpl<
-        TContractState,
-        +HasComponent<TContractState>,
-        +ISessionCallback<TContractState>,
-        +IAssertOwner<TContractState>,
+        TContractState, +HasComponent<TContractState>, +ISessionCallback<TContractState>, +IAssertOwner<TContractState>,
     > of ISession<ComponentState<TContractState>> {
         fn revoke_session(ref self: ComponentState<TContractState>, session_hash: felt252) {
             self.get_contract().assert_owner();
@@ -77,9 +73,7 @@ mod session_component {
             self.revoked_session.write(session_hash, true);
         }
 
-        fn register_session(
-            ref self: ComponentState<TContractState>, session: Session, guid_or_address: felt252,
-        ) {
+        fn register_session(ref self: ComponentState<TContractState>, session: Session, guid_or_address: felt252) {
             let contract = self.get_contract();
             contract.assert_owner();
 
@@ -88,17 +82,12 @@ mod session_component {
 
             let session_hash = session.get_message_hash_rev_1();
             assert(!self.revoked_session.read(session_hash), 'session/already-revoked');
-            assert(
-                !self.valid_session_cache.read((guid_or_address, session_hash)),
-                'session/already-registered',
-            );
+            assert(!self.valid_session_cache.read((guid_or_address, session_hash)), 'session/already-registered');
 
             self.valid_session_cache.write((guid_or_address, session_hash), true);
         }
 
-        fn is_session_revoked(
-            self: @ComponentState<TContractState>, session_hash: felt252,
-        ) -> bool {
+        fn is_session_revoked(self: @ComponentState<TContractState>, session_hash: felt252) -> bool {
             self.revoked_session.read(session_hash)
         }
 
@@ -123,7 +112,7 @@ mod session_component {
                 let policy = Policy::TypedData(*d);
 
                 policies.append(policy);
-            };
+            }
             let hash = poseidon_hash_span(hashes.span());
             let policies = policies.span();
 
@@ -171,10 +160,9 @@ mod session_component {
             let mut policies: Array<Policy> = array![];
             while let Option::Some(call) = calls.pop_front() {
                 policies.append(Policy::Call(*call));
-            };
+            }
             let policies = policies.span();
-            if let Option::Some(cached) = self
-                .assert_validate_policy_signature(signature, policies, transaction_hash) {
+            if let Option::Some(cached) = self.assert_validate_policy_signature(signature, policies, transaction_hash) {
                 self.valid_session_cache.write(cached, true);
             };
         }
@@ -203,17 +191,13 @@ mod session_component {
                 assert(contract.is_valid_authorizer(owner_guid), 'session/invalid-authorizer');
                 assert(signature.cache_authorization, 'session/cache-missing');
 
-                assert(
-                    self.valid_session_cache.read((owner_guid, session_hash)),
-                    'session/not-registered',
-                );
+                assert(self.valid_session_cache.read((owner_guid, session_hash)), 'session/not-registered');
             } else {
                 let parsed = contract.parse_authorization(signature.session_authorization);
                 let owner_guid = parsed.at(0).clone().signer().into_guid();
 
                 // check validity of token
-                if !signature.cache_authorization
-                    || !self.valid_session_cache.read((owner_guid, session_hash)) {
+                if !signature.cache_authorization || !self.valid_session_cache.read((owner_guid, session_hash)) {
                     contract.verify_authorization(session_hash, parsed.span());
 
                     if signature.cache_authorization {
@@ -222,37 +206,23 @@ mod session_component {
                 } else {
                     assert(contract.is_valid_authorizer(owner_guid), 'session/invalid-authorizer');
                 }
-            };
+            }
 
             let (message_hash, _, _) = hades_permutation(transaction_hash, session_hash, 2);
 
             let session_guid_from_sig = signature.session_signature.signer().into_guid();
 
-            assert(
-                signature.session.session_key_guid == session_guid_from_sig,
-                'session/session-key-mismatch',
-            );
+            assert(signature.session.session_key_guid == session_guid_from_sig, 'session/session-key-mismatch');
 
-            assert(
-                signature.session_signature.is_valid_signature(message_hash),
-                'session/invalid-session-sig',
-            );
+            assert(signature.session_signature.is_valid_signature(message_hash), 'session/invalid-session-sig');
 
             if signature.session.guardian_key_guid != 0 {
                 assert(
-                    signature
-                        .session
-                        .guardian_key_guid == signature
-                        .guardian_signature
-                        .signer()
-                        .into_guid(),
+                    signature.session.guardian_key_guid == signature.guardian_signature.signer().into_guid(),
                     'session/invalid-guardian',
                 );
 
-                assert(
-                    signature.guardian_signature.is_valid_signature(message_hash),
-                    'session/invalid-guardian-sig',
-                );
+                assert(signature.guardian_signature.is_valid_signature(message_hash), 'session/invalid-guardian-sig');
             }
 
             if (signature.session.allowed_policies_root == WILDCARD_MAGIC) {
@@ -282,7 +252,7 @@ fn check_policy(array: Span<Policy>, root: felt252, proofs: Span<Span<felt252>>)
 
         if merkle.verify(root, leaf, *proofs.at(i)) == false {
             break false;
-        };
+        }
         i += 1;
     }
 }

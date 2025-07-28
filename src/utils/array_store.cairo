@@ -1,5 +1,6 @@
-/// @dev 🚨 Attention: This file has not undergone an audit and is not intended for production use. Use at your own risk. Please exercise caution and conduct your own due diligence before interacting with this contract. 🚨
-use starknet::{SyscallResult, storage_access::{Store, StorageBaseAddress}};
+/// @dev 🚨 Attention: This file has not undergone an audit and is not intended for production use. Use at your own
+/// risk. Please exercise caution and conduct your own due diligence before interacting with this contract. 🚨
+use starknet::{SyscallResult, storage_access::{StorageBaseAddress, Store}};
 
 // Can store up to 255 felt252
 impl StoreFelt252Array of Store<Array<felt252>> {
@@ -24,14 +25,14 @@ impl StoreFelt252Array of Store<Array<felt252>> {
             let value = Store::<felt252>::read_at_offset(address_domain, base, offset).unwrap();
             arr.append(value);
             offset += Store::<felt252>::size();
-        };
+        }
 
         // Return the array.
         Result::Ok(arr)
     }
 
     fn write_at_offset(
-        address_domain: u32, base: StorageBaseAddress, mut offset: u8, mut value: Array<felt252>
+        address_domain: u32, base: StorageBaseAddress, mut offset: u8, mut value: Array<felt252>,
     ) -> SyscallResult<()> {
         // Store the length of the array in the first storage slot.
         let len: u8 = value.len().try_into().expect('ctrl/array-too-large');
@@ -39,11 +40,10 @@ impl StoreFelt252Array of Store<Array<felt252>> {
         offset += 1;
 
         // Store the array elements sequentially
-        while let Option::Some(element) = value
-            .pop_front() {
-                Store::<felt252>::write_at_offset(address_domain, base, offset, element).unwrap();
-                offset += Store::<felt252>::size();
-            };
+        while let Option::Some(element) = value.pop_front() {
+            Store::<felt252>::write_at_offset(address_domain, base, offset, element).unwrap();
+            offset += Store::<felt252>::size();
+        }
         Result::Ok(())
     }
 

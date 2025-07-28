@@ -1,8 +1,8 @@
 use controller::mocks::signer_list_mocks::SignerListMock;
-use controller::signer::signer_signature::{Signer, StarknetSigner, SignerTrait, starknet_signer_from_pubkey};
+use controller::signer::signer_signature::{Signer, SignerTrait, StarknetSigner, starknet_signer_from_pubkey};
 use controller::signer_storage::interface::ISignerList;
 use controller::signer_storage::signer_list::signer_list_component;
-use super::setup::constants::{MULTISIG_OWNER};
+use super::setup::constants::MULTISIG_OWNER;
 
 type ComponentState = signer_list_component::ComponentState<SignerListMock::ContractState>;
 
@@ -106,7 +106,7 @@ fn test_remove_all_signers() {
     component
         .remove_signers(
             array![MULTISIG_OWNER(1).pubkey, MULTISIG_OWNER(2).pubkey, MULTISIG_OWNER(3).pubkey].span(),
-            MULTISIG_OWNER(3).pubkey
+            MULTISIG_OWNER(3).pubkey,
         );
     assert_eq!(component.get_signers_len(), 0, "len should be 0");
 }
@@ -178,25 +178,25 @@ fn test_is_signer_before() {
     component
         .add_signers(array![MULTISIG_OWNER(1).pubkey, MULTISIG_OWNER(2).pubkey, MULTISIG_OWNER(3).pubkey].span(), 0);
     assert!(
-        component.is_signer_before(MULTISIG_OWNER(1).pubkey, MULTISIG_OWNER(2).pubkey), "signer 1 is before signer 2"
+        component.is_signer_before(MULTISIG_OWNER(1).pubkey, MULTISIG_OWNER(2).pubkey), "signer 1 is before signer 2",
     );
     assert!(
-        component.is_signer_before(MULTISIG_OWNER(1).pubkey, MULTISIG_OWNER(3).pubkey), "signer 1 is before signer 3"
+        component.is_signer_before(MULTISIG_OWNER(1).pubkey, MULTISIG_OWNER(3).pubkey), "signer 1 is before signer 3",
     );
     assert!(
-        component.is_signer_before(MULTISIG_OWNER(2).pubkey, MULTISIG_OWNER(3).pubkey), "signer 2 is before signer 3"
+        component.is_signer_before(MULTISIG_OWNER(2).pubkey, MULTISIG_OWNER(3).pubkey), "signer 2 is before signer 3",
     );
     assert!(
         !component.is_signer_before(MULTISIG_OWNER(2).pubkey, MULTISIG_OWNER(1).pubkey),
-        "signer 2 is not before signer 1"
+        "signer 2 is not before signer 1",
     );
     assert!(
         !component.is_signer_before(MULTISIG_OWNER(3).pubkey, MULTISIG_OWNER(1).pubkey),
-        "signer 3 is not before signer 1"
+        "signer 3 is not before signer 1",
     );
     assert!(
         !component.is_signer_before(MULTISIG_OWNER(3).pubkey, MULTISIG_OWNER(2).pubkey),
-        "signer 3 is not before signer 2"
+        "signer 3 is not before signer 2",
     );
 }
 

@@ -1,73 +1,57 @@
 // SPDX-License-Identifier: MIT
 
-use starknet::account::Call;
-use starknet::ContractAddress;
 use controller::signer::signer_signature::{Signer, SignerSignature, SignerType};
+use starknet::ContractAddress;
+use starknet::account::Call;
 
 #[starknet::contract(account)]
 mod ControllerAccount {
-    use openzeppelin::upgrades::UpgradeableComponent::InternalTrait;
-    use core::traits::TryInto;
+    use controller::account::interface::{IAccount, IAssertOwner, IControllerAccount};
+    use controller::delegate_account::delegate_account::delegate_account_component;
+    use controller::external_owners::external_owners::external_owners_component;
+    use controller::external_owners::external_owners::external_owners_component::InternalImpl as ExternalOwnersInternalImpl;
+    use controller::introspection::src5::src5_component;
+    use controller::multiple_owners::interface::IMultipleOwners;
+    use controller::multiple_owners::multiple_owners::multiple_owners_component;
+    use controller::outside_execution::interface::IOutsideExecutionCallback;
+    use controller::outside_execution::outside_execution::outside_execution_component;
+    use controller::recovery::interface::{EscapeStatus, LegacyEscape, LegacyEscapeType};
+    use controller::session::interface::{DetailedTypedData, ISessionCallback, SessionToken, TypedData};
+    use controller::session::session::session_component;
+    use controller::session::session::session_component::InternalImpl;
+    use controller::signer::signer_signature::{
+        Signer, SignerSignature, SignerSignatureTrait, SignerStorageTrait, SignerStorageValue, SignerTrait, SignerType,
+        StarknetSignature, StarknetSigner, starknet_signer_from_pubkey,
+    };
+    use controller::upgrade::interface::{IUpgradableCallback, IUpgradableCallbackOld};
+    use controller::upgrade::upgrade::upgrade_component;
+    use controller::utils::asserts::{assert_no_self_call, assert_only_protocol, assert_only_self};
+    use controller::utils::calls::execute_multicall;
+    use controller::utils::serialization::full_deserialize;
+    use controller::utils::transaction_version::{
+        DA_MODE_L1, TX_V1, TX_V1_ESTIMATE, TX_V3, TX_V3_ESTIMATE, assert_correct_declare_version,
+        assert_correct_deploy_account_version, assert_correct_invoke_version, is_estimate_transaction,
+    };
+    use core::array::{ArrayTrait, SpanTrait};
     use core::option::OptionTrait;
-    use core::array::SpanTrait;
-    use core::to_byte_array::FormatAsByteArray;
-    use core::array::ArrayTrait;
-    use core::traits::Into;
     use core::poseidon::{PoseidonTrait, hades_permutation, poseidon_hash_span};
     use core::result::ResultTrait;
+    use core::to_byte_array::FormatAsByteArray;
+    use core::traits::{Into, TryInto};
     use hash::HashStateTrait;
-    use pedersen::PedersenTrait;
-    use starknet::{
-        ContractAddress, ClassHash, get_block_timestamp, get_contract_address, VALIDATED,
-        replace_class_syscall, get_caller_address, account::Call, SyscallResultTrait, get_tx_info,
-        get_execution_info, syscalls::storage_read_syscall,
-        storage_access::{
-            storage_address_from_base_and_offset, storage_base_address_from_felt252,
-            storage_write_syscall,
-        },
-    };
-
-    use controller::outside_execution::{
-        outside_execution::outside_execution_component, interface::{IOutsideExecutionCallback},
-    };
-    use controller::recovery::interface::{LegacyEscape, LegacyEscapeType, EscapeStatus};
-    use controller::signer::{
-        signer_signature::{
-            Signer, SignerStorageValue, SignerType, StarknetSigner, StarknetSignature, SignerTrait,
-            SignerStorageTrait, SignerSignature, SignerSignatureTrait, starknet_signer_from_pubkey,
-        },
-    };
-    use controller::upgrade::{
-        upgrade::upgrade_component, interface::{IUpgradableCallback, IUpgradableCallbackOld},
-    };
-    use controller::utils::{
-        asserts::{assert_no_self_call, assert_only_self, assert_only_protocol},
-        calls::execute_multicall, serialization::full_deserialize,
-        transaction_version::{
-            TX_V1, TX_V1_ESTIMATE, TX_V3, TX_V3_ESTIMATE, assert_correct_invoke_version,
-            assert_correct_declare_version, assert_correct_deploy_account_version, DA_MODE_L1,
-            is_estimate_transaction,
-        },
-    };
-    use controller::session::interface::{DetailedTypedData, SessionToken, TypedData};
-
     use openzeppelin::security::reentrancyguard::ReentrancyGuardComponent;
     use openzeppelin::upgrades::UpgradeableComponent;
+    use openzeppelin::upgrades::UpgradeableComponent::InternalTrait;
     use openzeppelin::upgrades::interface::IUpgradeable;
-    use controller::account::interface::{IAccount, IControllerAccount, IAssertOwner};
-
-    use controller::external_owners::external_owners::{
-        external_owners_component,
-        external_owners_component::InternalImpl as ExternalOwnersInternalImpl,
+    use pedersen::PedersenTrait;
+    use starknet::account::Call;
+    use starknet::storage_access::{
+        storage_address_from_base_and_offset, storage_base_address_from_felt252, storage_write_syscall,
     };
-    use controller::delegate_account::delegate_account::delegate_account_component;
-    use controller::introspection::src5::src5_component;
-    use controller::session::{
-        session::session_component::InternalImpl, session::session_component,
-        interface::ISessionCallback,
-    };
-    use controller::multiple_owners::{
-        multiple_owners::{multiple_owners_component}, interface::IMultipleOwners,
+    use starknet::syscalls::storage_read_syscall;
+    use starknet::{
+        ClassHash, ContractAddress, SyscallResultTrait, VALIDATED, get_block_timestamp, get_caller_address,
+        get_contract_address, get_execution_info, get_tx_info, replace_class_syscall,
     };
 
     const TRANSACTION_VERSION: felt252 = 1;
@@ -79,38 +63,24 @@ mod ControllerAccount {
     #[abi(embed_v0)]
     impl SessionImpl = session_component::SessionComponent<ContractState>;
 
-    component!(
-        path: multiple_owners_component, storage: multiple_owners, event: MultipleOwnersEvent,
-    );
+    component!(path: multiple_owners_component, storage: multiple_owners, event: MultipleOwnersEvent);
     #[abi(embed_v0)]
-    impl MultipleOwnersImpl =
-        multiple_owners_component::MultipleOwnersImpl<ContractState>;
+    impl MultipleOwnersImpl = multiple_owners_component::MultipleOwnersImpl<ContractState>;
 
     // Execute from outside
-    component!(
-        path: outside_execution_component,
-        storage: execute_from_outside,
-        event: ExecuteFromOutsideEvents,
-    );
+    component!(path: outside_execution_component, storage: execute_from_outside, event: ExecuteFromOutsideEvents);
     #[abi(embed_v0)]
-    impl ExecuteFromOutside =
-        outside_execution_component::OutsideExecutionImpl<ContractState>;
+    impl ExecuteFromOutside = outside_execution_component::OutsideExecutionImpl<ContractState>;
 
     // External owners
-    component!(
-        path: external_owners_component, storage: external_owners, event: ExternalOwnersEvent,
-    );
+    component!(path: external_owners_component, storage: external_owners, event: ExternalOwnersEvent);
     #[abi(embed_v0)]
-    impl ExternalOwners =
-        external_owners_component::ExternalOwnersImpl<ContractState>;
+    impl ExternalOwners = external_owners_component::ExternalOwnersImpl<ContractState>;
 
     // Delegate Account
-    component!(
-        path: delegate_account_component, storage: delegate_account, event: DelegateAccountEvents,
-    );
+    component!(path: delegate_account_component, storage: delegate_account, event: DelegateAccountEvents);
     #[abi(embed_v0)]
-    impl DelegateAccount =
-        delegate_account_component::DelegateAccountImpl<ContractState>;
+    impl DelegateAccount = delegate_account_component::DelegateAccountImpl<ContractState>;
 
     // SRC5
     component!(path: src5_component, storage: src5, event: SRC5Events);
@@ -122,9 +92,7 @@ mod ControllerAccount {
     impl UpgradeableInternalImpl = UpgradeableComponent::InternalImpl<ContractState>;
 
     // Reentrancy guard
-    component!(
-        path: ReentrancyGuardComponent, storage: reentrancy_guard, event: ReentrancyGuardEvent,
-    );
+    component!(path: ReentrancyGuardComponent, storage: reentrancy_guard, event: ReentrancyGuardEvent);
     impl ReentrancyGuardInternalImpl = ReentrancyGuardComponent::InternalImpl<ContractState>;
 
     #[storage]
@@ -195,9 +163,7 @@ mod ControllerAccount {
     #[constructor]
     fn constructor(ref self: ContractState, owner: Owner, guardian: Option<Signer>) {
         match owner {
-            Owner::Signer(signer) => {
-                self.multiple_owners.owners.write(signer.into_guid(), true);
-            },
+            Owner::Signer(signer) => { self.multiple_owners.owners.write(signer.into_guid(), true); },
             Owner::Account(account) => { self.external_owners._register_external_owner(account); },
         }
     }
@@ -215,11 +181,7 @@ mod ControllerAccount {
             assert(tx_info.paymaster_data.is_empty(), 'unsupported-paymaster');
 
             if self.session.is_session(tx_info.signature) {
-                self
-                    .session
-                    .validate_session_serialized(
-                        tx_info.signature, calls.span(), tx_info.transaction_hash,
-                    );
+                self.session.validate_session_serialized(tx_info.signature, calls.span(), tx_info.transaction_hash);
             } else {
                 self
                     .assert_valid_calls_and_signature(
@@ -244,40 +206,24 @@ mod ControllerAccount {
                 let session_timestamp = *signature[1];
                 // can call unwrap safely as the session has already been deserialized
                 let session_timestamp_u64 = session_timestamp.try_into().unwrap();
-                assert(
-                    session_timestamp_u64 >= exec_info.block_info.unbox().block_timestamp,
-                    'session/expired',
-                );
+                assert(session_timestamp_u64 >= exec_info.block_info.unbox().block_timestamp, 'session/expired');
             }
 
             let retdata = execute_multicall(calls.span());
 
-            self
-                .emit(
-                    TransactionExecuted {
-                        hash: tx_info.transaction_hash, response: retdata.span(),
-                    },
-                );
+            self.emit(TransactionExecuted { hash: tx_info.transaction_hash, response: retdata.span() });
             self.reentrancy_guard.end();
             retdata
         }
 
-        fn is_valid_signature(
-            self: @ContractState, hash: felt252, signature: Array<felt252>,
-        ) -> felt252 {
+        fn is_valid_signature(self: @ContractState, hash: felt252, signature: Array<felt252>) -> felt252 {
             if *signature[0] == SESSION_TYPED_DATE_MAGIC {
-                if self
-                    .is_valid_session_typed_data_signature(
-                        hash, signature.span().slice(1, signature.len() - 1),
-                    ) {
+                if self.is_valid_session_typed_data_signature(hash, signature.span().slice(1, signature.len() - 1)) {
                     starknet::VALIDATED
                 } else {
                     0
                 }
-            } else if self
-                .is_valid_span_signature(
-                    hash, self.parse_signature_array(signature.span()).span(),
-                ) {
+            } else if self.is_valid_span_signature(hash, self.parse_signature_array(signature.span()).span()) {
                 starknet::VALIDATED
             } else {
                 0
@@ -300,9 +246,7 @@ mod ControllerAccount {
                 };
                 self
                     .session
-                    .validate_session_serialized(
-                        tx_info.signature, array![call].span(), tx_info.transaction_hash,
-                    );
+                    .validate_session_serialized(tx_info.signature, array![call].span(), tx_info.transaction_hash);
             } else {
                 self
                     .assert_valid_span_signature(
@@ -322,18 +266,13 @@ mod ControllerAccount {
             let tx_info = get_tx_info().unbox();
             assert_correct_deploy_account_version(tx_info.version);
             assert(tx_info.paymaster_data.is_empty(), 'unsupported-paymaster');
-            self
-                .assert_valid_span_signature(
-                    tx_info.transaction_hash, self.parse_signature_array(tx_info.signature),
-                );
+            self.assert_valid_span_signature(tx_info.transaction_hash, self.parse_signature_array(tx_info.signature));
             starknet::VALIDATED
         }
     }
 
     impl SessionCallbackImpl of ISessionCallback<ContractState> {
-        fn parse_authorization(
-            self: @ContractState, authorization_signature: Span<felt252>,
-        ) -> Array<SignerSignature> {
+        fn parse_authorization(self: @ContractState, authorization_signature: Span<felt252>) -> Array<SignerSignature> {
             self.parse_signature_array(authorization_signature)
         }
 
@@ -350,34 +289,23 @@ mod ControllerAccount {
         }
 
         fn verify_authorization(
-            self: @ContractState,
-            session_hash: felt252,
-            authorization_signature: Span<SignerSignature>,
+            self: @ContractState, session_hash: felt252, authorization_signature: Span<SignerSignature>,
         ) {
-            assert(
-                self.is_valid_span_signature(session_hash, authorization_signature),
-                'session/invalid-account-sig',
-            );
+            assert(self.is_valid_span_signature(session_hash, authorization_signature), 'session/invalid-account-sig');
         }
     }
 
     impl IAssertOwnerImpl of IAssertOwner<ContractState> {
         fn assert_owner(self: @ContractState) {
             let caller = get_caller_address();
-            assert(
-                caller == get_contract_address() || self.is_external_owner(caller),
-                'caller-not-owner',
-            );
+            assert(caller == get_contract_address() || self.is_external_owner(caller), 'caller-not-owner');
         }
     }
 
     impl OutsideExecutionCallbackImpl of IOutsideExecutionCallback<ContractState> {
         #[inline(always)]
         fn execute_from_outside_callback(
-            ref self: ContractState,
-            calls: Span<Call>,
-            outside_execution_hash: felt252,
-            signature: Span<felt252>,
+            ref self: ContractState, calls: Span<Call>, outside_execution_hash: felt252, signature: Span<felt252>,
         ) -> Array<Span<felt252>> {
             if self.session.is_session(signature) {
                 self.session.validate_session_serialized(signature, calls, outside_execution_hash);
@@ -392,10 +320,7 @@ mod ControllerAccount {
                     );
             }
             let retdata = execute_multicall(calls);
-            self
-                .emit(
-                    TransactionExecuted { hash: outside_execution_hash, response: retdata.span() },
-                );
+            self.emit(TransactionExecuted { hash: outside_execution_hash, response: retdata.span() });
             retdata
         }
     }
@@ -423,9 +348,7 @@ mod ControllerAccount {
         }
 
         #[must_use]
-        fn is_valid_owner_signature(
-            self: @ContractState, hash: felt252, signer_signature: SignerSignature,
-        ) -> bool {
+        fn is_valid_owner_signature(self: @ContractState, hash: felt252, signer_signature: SignerSignature) -> bool {
             let signer = signer_signature.signer().storage_value();
             if !self.is_owner(signer.into_guid()) {
                 return false;
@@ -439,12 +362,9 @@ mod ControllerAccount {
         ) -> bool {
             // this function assumes revision `1`
 
-            let detailed_typed_data_items: Array<DetailedTypedData> = Serde::deserialize(
-                ref signature,
-            )
+            let detailed_typed_data_items: Array<DetailedTypedData> = Serde::deserialize(ref signature)
                 .expect('invalid-signature-format');
-            let session_token: SessionToken = Serde::deserialize(ref signature)
-                .expect('invalid-signature-format');
+            let session_token: SessionToken = Serde::deserialize(ref signature).expect('invalid-signature-format');
             assert(!detailed_typed_data_items.is_empty(), 'empty-typed-data-list');
             assert(signature.is_empty(), 'invalid-signature-length');
 
@@ -459,12 +379,11 @@ mod ControllerAccount {
             let mut items = detailed_typed_data_items.span();
             while let Option::Some(detailed_typed_data) = items.pop_front() {
                 // SNIP-12 message encoding
-                let mut snip_12_message_hasher = PoseidonTrait::new()
-                    .update(*detailed_typed_data.type_hash);
+                let mut snip_12_message_hasher = PoseidonTrait::new().update(*detailed_typed_data.type_hash);
                 let mut params_span = detailed_typed_data.params.clone();
                 while let Option::Some(param_item) = params_span.pop_front() {
                     snip_12_message_hasher = snip_12_message_hasher.update(*param_item);
-                };
+                }
 
                 // SNIP-12's `message` component; also used as `typed_data_hash` internally
                 let message_hash = snip_12_message_hasher.finalize();
@@ -482,7 +401,7 @@ mod ControllerAccount {
                     *detailed_typed_data.domain_hash, *detailed_typed_data.type_hash, 2,
                 );
                 typed_data_items.append(TypedData { scope_hash, typed_data_hash: message_hash });
-            };
+            }
 
             let message_hash = if message_hashes.len() == 1 {
                 // compatible with SNIP-12
@@ -498,9 +417,7 @@ mod ControllerAccount {
         }
 
         #[inline(always)]
-        fn parse_signature_array(
-            self: @ContractState, mut signatures: Span<felt252>,
-        ) -> Array<SignerSignature> {
+        fn parse_signature_array(self: @ContractState, mut signatures: Span<felt252>) -> Array<SignerSignature> {
             // manual inlining instead of calling full_deserialize for performance
             let deserialized: Array<SignerSignature> = Serde::deserialize(ref signatures)
                 .expect('invalid-signature-format');
@@ -508,13 +425,9 @@ mod ControllerAccount {
             deserialized
         }
 
-        fn assert_valid_span_signature(
-            self: @ContractState, hash: felt252, signer_signatures: Array<SignerSignature>,
-        ) {
+        fn assert_valid_span_signature(self: @ContractState, hash: felt252, signer_signatures: Array<SignerSignature>) {
             assert(signer_signatures.len() <= 2, 'invalid-signature-length');
-            assert(
-                self.is_valid_owner_signature(hash, *signer_signatures.at(0)), 'invalid-owner-sig',
-            );
+            assert(self.is_valid_owner_signature(hash, *signer_signatures.at(0)), 'invalid-owner-sig');
         }
 
         fn assert_valid_calls_and_signature(

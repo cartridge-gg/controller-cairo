@@ -1,8 +1,11 @@
-/// @dev 🚨 This smart contract is a mock implementation and is not meant for actual deployment or use in any live environment. It is solely for testing, educational, or demonstration purposes. Any interactions with this contract will not have real-world consequences or effects on blockchain networks. Please refrain from relying on the functionality of this contract for any production. 🚨
+/// @dev 🚨 This smart contract is a mock implementation and is not meant for actual deployment or use in any live
+/// environment. It is solely for testing, educational, or demonstration purposes. Any interactions with this contract
+/// will not have real-world consequences or effects on blockchain networks. Please refrain from relying on the
+/// functionality of this contract for any production. 🚨
 #[starknet::contract]
 mod ThresholdRecoveryMock {
     use controller::multisig::multisig::multisig_component;
-    use controller::recovery::{threshold_recovery::threshold_recovery_component};
+    use controller::recovery::threshold_recovery::threshold_recovery_component;
     use controller::signer_storage::signer_list::signer_list_component;
 
     component!(path: threshold_recovery_component, storage: escape, event: EscapeEvents);
@@ -45,7 +48,7 @@ mod ThresholdRecoveryMock {
 }
 #[starknet::contract]
 mod ExternalRecoveryMock {
-    use controller::external_recovery::{external_recovery::{external_recovery_component, IExternalRecoveryCallback}};
+    use controller::external_recovery::external_recovery::{IExternalRecoveryCallback, external_recovery_component};
     use controller::multisig::multisig::multisig_component;
     use controller::signer_storage::signer_list::signer_list_component;
     use controller::utils::calls::execute_multicall;
@@ -94,7 +97,7 @@ mod ExternalRecoveryMock {
     impl IExternalRecoveryCallbackImpl of IExternalRecoveryCallback<ContractState> {
         fn execute_recovery_call(ref self: ContractState, selector: felt252, calldata: Span<felt252>) {
             execute_multicall(
-                array![starknet::account::Call { to: starknet::get_contract_address(), selector, calldata }].span()
+                array![starknet::account::Call { to: starknet::get_contract_address(), selector, calldata }].span(),
             );
         }
     }

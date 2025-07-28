@@ -7,7 +7,8 @@ use core::traits::TryInto;
 use snforge_std::{CheatSpan, cheat_block_timestamp, cheat_caller_address};
 use starknet::ContractAddress;
 use super::setup::account_test_setup::{
-    ITestControllerAccountDispatcherTrait, initialize_account, initialize_account_with, initialize_account_without_guardian,
+    ITestControllerAccountDispatcherTrait, initialize_account, initialize_account_with,
+    initialize_account_without_guardian,
 };
 use super::setup::utils::{felt252TryIntoStarknetSigner, set_tx_version_foundry};
 use super::setup::constants::{NEW_OWNER, OWNER, WRONG_OWNER};

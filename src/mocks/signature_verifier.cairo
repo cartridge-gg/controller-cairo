@@ -1,7 +1,6 @@
 #[starknet::contract]
 mod SignatureVerifier {
-    use controller::signer::{signer_signature::{Signer, SignerSignature, SignerSignatureTrait,}};
-
+    use controller::signer::signer_signature::{Signer, SignerSignature, SignerSignatureTrait};
     use controller::utils::serialization::full_deserialize;
     use starknet::VALIDATED;
 
