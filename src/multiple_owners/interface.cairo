@@ -1,10 +1,8 @@
-use starknet::ContractAddress;
-use controller::signer::{
-    signer_signature::{
-        Signer, SignerStorageValue, SignerType, StarknetSigner, StarknetSignature, SignerTrait,
-        SignerStorageTrait, SignerSignature, SignerSignatureTrait, starknet_signer_from_pubkey
-    }
+use controller::signer::signer_signature::{
+    Signer, SignerSignature, SignerSignatureTrait, SignerStorageTrait, SignerStorageValue, SignerTrait, SignerType,
+    StarknetSignature, StarknetSigner, starknet_signer_from_pubkey,
 };
+use starknet::ContractAddress;
 
 #[starknet::interface]
 trait IMultipleOwners<TContractState> {

@@ -57,7 +57,7 @@ fn set_escape_security_period_with_ready_escape() {
 #[test]
 fn set_escape_security_period_with_expired_escape() {
     let account = initialize_account();
-        account.trigger_escape_guardian(Option::None);
+    account.trigger_escape_guardian(Option::None);
 
     cheat_block_timestamp(account.contract_address, 7 * 24 * 60 * 60 * 2, CheatSpan::Indefinite(()));
     let (escape, status) = account.get_escape_and_status();

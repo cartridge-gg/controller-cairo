@@ -2,7 +2,9 @@ use controller::account::interface::Version;
 use controller::presets::multisig_account::ControllerMultisigAccount;
 use controller::signer::signer_signature::{Signer, SignerSignature, StarknetSigner, starknet_signer_from_pubkey};
 use core::traits::TryInto;
-use snforge_std::{ContractClass, ContractClassTrait, DeclareResult, RevertedTransaction, declare, CheatSpan, cheat_caller_address};
+use snforge_std::{
+    CheatSpan, ContractClass, ContractClassTrait, DeclareResult, RevertedTransaction, cheat_caller_address, declare,
+};
 use starknet::ContractAddress;
 use starknet::account::Call;
 use starknet::syscalls::deploy_syscall;

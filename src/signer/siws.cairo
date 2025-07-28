@@ -1,17 +1,16 @@
 use alexandria_encoding::base58::Base58Encoder;
-use controller::signer::signer_signature::{SIWSSignature, Ed25519Signer};
+use controller::signer::signer_signature::{Ed25519Signer, SIWSSignature};
 use controller::utils::array_ext::ArrayExtTrait;
 use controller::utils::bytes::{
-    ArrayU8Ext, ByteArrayExt, u256_to_byte_array, u256_to_u8s, u32s_to_byte_array,
-    u32s_typed_to_u256,
+    ArrayU8Ext, ByteArrayExt, u256_to_byte_array, u256_to_u8s, u32s_to_byte_array, u32s_typed_to_u256,
 };
 use controller::utils::hashing::poseidon_2;
 use core::byte_array::{ByteArray, ByteArrayTrait};
 use core::hash::{HashStateExTrait, HashStateTrait};
 use core::serde::Serde;
 use core::sha256::compute_sha256_byte_array;
-use starknet::secp256_trait::is_signature_entry_valid;
 use garaga::signatures::eddsa_25519::EdDSASignatureWithHint;
+use starknet::secp256_trait::is_signature_entry_valid;
 
 #[starknet::interface]
 trait IGaragaEddsa<TContractState> {
@@ -24,9 +23,7 @@ trait IGaragaEddsa<TContractState> {
 /// @param signature The SIWS signature containing domain and Ed25519 signature with hint
 /// @return True if the signature is valid, false otherwise
 #[inline(always)]
-fn is_valid_siws_signature(
-    hash: felt252, signer: Ed25519Signer, mut siws_signature: SIWSSignature,
-) -> bool {
+fn is_valid_siws_signature(hash: felt252, signer: Ed25519Signer, mut siws_signature: SIWSSignature) -> bool {
     let address_bytes = u256_to_u8s(signer.pubkey.into());
     let address_b58 = Base58Encoder::encode(address_bytes.span());
     let address_b58_bytes = address_b58.span().into_byte_array();
@@ -46,7 +43,7 @@ fn is_valid_siws_signature(
 
 #[starknet::contract]
 mod GaragaEddsa {
-    use garaga::signatures::eddsa_25519::{is_valid_eddsa_signature, EdDSASignatureWithHint};
+    use garaga::signatures::eddsa_25519::{EdDSASignatureWithHint, is_valid_eddsa_signature};
 
     #[storage]
     struct Storage {}

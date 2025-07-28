@@ -1,28 +1,59 @@
-# Controller Account Upgrade
+# Controller Account Upgrades
 
-This documents covers the upgrade process starting with version 0.2.3
+This document covers the upgrade process for Controller Accounts.
 
-In general downgrading is not supported, but it won't always be enforced
+## Current Version: 0.4.0
 
-Depending on the versions, some upgrades might cancel an ongoing escape, and it might need to be triggered again after the upgrade.
-This shouldn't be a security risk since two signatures are needed to perform an upgrade when there's a guardian set.
+The current version is 0.4.0, which includes significant improvements and breaking changes. See the [changelog](./CHANGELOG_controller_account.md) for detailed information about what's new.
 
-When upgrading to a version >=0.3.0, it's possible to bundle the upgrade with a multicall. The only restriction is that the multicall can't make any calls to the account
+## Upgrade Principles
 
-To do that you need to serialize the calls to perform after the upgrade as `Array<Call>` and pass the serialized calls to `upgrade`.
+- **No Downgrading**: Downgrading is not supported and is actively prevented from version 0.4.0 onwards
+- **Secure Process**: Upgrades require approval from both owner and guardian signatures
+- **Escape Handling**: Some upgrades may cancel ongoing escapes, which can be re-triggered after upgrade completion
+- **Bundle Support**: Version 0.3.0+ supports bundling upgrades with multicalls (with restrictions)
 
-## Upgrading from v0.2.3.\* to >=0.3.0
+## Upgrade Process
 
-**⚠️ WARNING ⚠️** It's important to pass some non-empty `calldata` to the upgrade method
+To upgrade a Controller Account:
 
-The upgrade function on v0.2.3.\* looks like
+1. Ensure you have both owner and guardian signatures available
+2. Prepare any post-upgrade calls (if bundling operations)
+3. Call the `upgrade` function with the new class hash
+4. The system will automatically handle migration logic
 
-```
+### Bundled Upgrades (v0.3.0+)
+
+You can bundle additional operations with upgrades by serializing calls as `Array<Call>` and passing them to `upgrade`. 
+
+**Restriction**: Bundled calls cannot make calls back to the account itself.
+
+## Legacy Upgrade Paths
+
+### From v0.2.3.* to >=0.3.0
+
+**⚠️ WARNING ⚠️** When upgrading from v0.2.3.*, you must pass non-empty `calldata` to the upgrade method.
+
+The legacy upgrade function signature was:
+```cairo
 func upgrade(implementation: felt, calldata_len: felt, calldata: felt*)
 ```
 
-if `calldata_len` is 0 it will look like it’s working, but the proxy won’t be removed and account will stop working after Starknet regenesis. So calldata should be at least an empty array
+If `calldata_len` is 0, the proxy won't be properly removed and the account will malfunction. Always pass at least an empty array.
 
-## Upgrading from versions < 0.2.3
+### From versions < 0.2.3
 
-You need to upgrade to 0.2.3.1 and then perform another upgrade
+A two-step upgrade is required:
+1. First upgrade to v0.2.3.1
+2. Then upgrade to the target version
+
+## Version 0.4.0 Breaking Changes
+
+- **No Downgrades**: Cannot downgrade from 0.4.0 to any older version
+- **Signer Type Changes**: Many functions now use `Signer` types instead of raw public keys
+- **Multi-Owner System**: Simplified to basic owner management (guardian/recovery features not implemented)
+- **Component Architecture**: Modular design with separate components for different features
+
+**Note**: Guardian-based security and recovery mechanisms described in legacy documentation are not implemented in the current version.
+
+For detailed migration information, see the [changelog](./CHANGELOG_controller_account.md).

@@ -1,21 +1,21 @@
 use controller::mocks::recovery_mocks::ThresholdRecoveryMock;
-use controller::multisig::interface::IControllerMultisigInternal;
-use controller::multisig::interface::{IControllerMultisig, IControllerMultisigDispatcher, IControllerMultisigDispatcherTrait};
-use controller::recovery::interface::{IRecovery, IRecoveryDispatcher, IRecoveryDispatcherTrait, EscapeStatus};
+use controller::multisig::interface::{
+    IControllerMultisig, IControllerMultisigDispatcher, IControllerMultisigDispatcherTrait, IControllerMultisigInternal,
+};
+use controller::recovery::interface::{EscapeStatus, IRecovery, IRecoveryDispatcher, IRecoveryDispatcherTrait};
 use controller::recovery::threshold_recovery::{
-    IToggleThresholdRecovery, IToggleThresholdRecoveryDispatcher, IToggleThresholdRecoveryDispatcherTrait
+    IToggleThresholdRecovery, IToggleThresholdRecoveryDispatcher, IToggleThresholdRecoveryDispatcherTrait,
+    threshold_recovery_component,
 };
-use controller::recovery::{threshold_recovery::threshold_recovery_component};
-use controller::signer::{signer_signature::{Signer, StarknetSigner, starknet_signer_from_pubkey, SignerTrait}};
+use controller::signer::signer_signature::{Signer, SignerTrait, StarknetSigner, starknet_signer_from_pubkey};
 use controller::signer_storage::signer_list::signer_list_component;
-use snforge_std::{
-    CheatSpan, cheat_caller_address, cheat_block_timestamp, stop_prank, test_address, declare, ContractClassTrait, ContractClass,
-    spy_events, SpyOn, EventSpy, EventFetcher, EventAssertions, EventSpyAssertionsTrait
-};
-use starknet::SyscallResultTrait;
 use core::traits::TryInto;
-use starknet::ContractAddress;
-use super::setup::constants::{MULTISIG_OWNER};
+use snforge_std::{
+    CheatSpan, ContractClass, ContractClassTrait, EventAssertions, EventFetcher, EventSpy, EventSpyAssertionsTrait,
+    SpyOn, cheat_block_timestamp, cheat_caller_address, declare, spy_events, stop_prank, test_address,
+};
+use starknet::{ContractAddress, SyscallResultTrait};
+use super::setup::constants::MULTISIG_OWNER;
 
 fn SIGNER_1() -> Signer {
     starknet_signer_from_pubkey(MULTISIG_OWNER(1).pubkey)
@@ -40,11 +40,11 @@ fn setup() -> (IRecoveryDispatcher, IToggleThresholdRecoveryDispatcher, IControl
     (
         IRecoveryDispatcher { contract_address },
         IToggleThresholdRecoveryDispatcher { contract_address },
-        IControllerMultisigDispatcher { contract_address }
+        IControllerMultisigDispatcher { contract_address },
     )
 }
 
-// Toggle 
+// Toggle
 
 #[test]
 fn test_toggle_escape() {
@@ -79,12 +79,12 @@ fn test_trigger_escape_first_signer() {
     assert_eq!(
         *escape.target_signers.at(0),
         starknet_signer_from_pubkey(MULTISIG_OWNER(1).pubkey).into_guid(),
-        "should be signer 1"
+        "should be signer 1",
     );
     assert_eq!(
         *escape.new_signers.at(0),
         starknet_signer_from_pubkey(MULTISIG_OWNER(3).pubkey).into_guid(),
-        "should be signer 3"
+        "should be signer 3",
     );
 
     assert_eq!(escape.ready_at, 10, "should be 10");
@@ -99,12 +99,12 @@ fn test_trigger_escape_last_signer() {
     assert_eq!(
         *escape.target_signers.at(0),
         starknet_signer_from_pubkey(MULTISIG_OWNER(2).pubkey).into_guid(),
-        "should be signer 2"
+        "should be signer 2",
     );
     assert_eq!(
         *escape.new_signers.at(0),
         starknet_signer_from_pubkey(MULTISIG_OWNER(3).pubkey).into_guid(),
-        "should be signer 3"
+        "should be signer 3",
     );
 
     assert_eq!(escape.ready_at, 10, "should be 10");
@@ -119,13 +119,13 @@ fn test_trigger_escape_can_override() {
     let (escape, _) = component.get_escape();
     assert_eq!(
         *escape.target_signers.at(0),
-        starknet_signer_from_pubkey(MULTISIG_OWNER(2).pubkey,).into_guid(),
-        "should be signer 2"
+        starknet_signer_from_pubkey(MULTISIG_OWNER(2).pubkey).into_guid(),
+        "should be signer 2",
     );
     assert_eq!(
         *escape.new_signers.at(0),
-        starknet_signer_from_pubkey(MULTISIG_OWNER(3).pubkey,).into_guid(),
-        "should be signer 3"
+        starknet_signer_from_pubkey(MULTISIG_OWNER(3).pubkey).into_guid(),
+        "should be signer 3",
     );
 }
 
@@ -225,7 +225,7 @@ fn test_cancel_escape() {
     let event = threshold_recovery_component::Event::EscapeCanceled(
         threshold_recovery_component::EscapeCanceled {
             target_signers: array![SIGNER_2().into_guid()].span(), new_signers: array![SIGNER_3().into_guid()].span(),
-        }
+        },
     );
     spy.assert_emitted(@array![(component.contract_address, event)]);
 
@@ -249,7 +249,7 @@ fn test_cancel_escape_expired() {
     let event = threshold_recovery_component::Event::EscapeCanceled(
         threshold_recovery_component::EscapeCanceled {
             target_signers: array![SIGNER_2().into_guid()].span(), new_signers: array![SIGNER_3().into_guid()].span(),
-        }
+        },
     );
     spy.assert_not_emitted(@array![(component.contract_address, event)]);
 

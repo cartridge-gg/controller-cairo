@@ -1,4 +1,5 @@
-use starknet::{get_contract_address, get_caller_address, ContractAddress, account::Call};
+use starknet::account::Call;
+use starknet::{ContractAddress, get_caller_address, get_contract_address};
 
 const DECLARE_SELECTOR: felt252 = selector!("__declare_transaction__");
 
@@ -13,10 +14,9 @@ fn assert_only_protocol(caller_address: ContractAddress) {
 }
 
 fn assert_no_self_call(mut calls: Span<Call>, self: ContractAddress) {
-    while let Option::Some(call) = calls
-        .pop_front() {
-            if *call.selector != DECLARE_SELECTOR {
-                assert(*call.to != self, 'controller/no-multicall-to-self')
-            }
+    while let Option::Some(call) = calls.pop_front() {
+        if *call.selector != DECLARE_SELECTOR {
+            assert(*call.to != self, 'controller/no-multicall-to-self')
         }
+    }
 }

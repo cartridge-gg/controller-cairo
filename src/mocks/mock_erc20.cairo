@@ -1,4 +1,7 @@
-/// @dev 🚨 This smart contract is a mock implementation and is not meant for actual deployment or use in any live environment. It is solely for testing, educational, or demonstration purposes. Any interactions with this contract will not have real-world consequences or effects on blockchain networks. Please refrain from relying on the functionality of this contract for any production. 🚨
+/// @dev 🚨 This smart contract is a mock implementation and is not meant for actual deployment or use in any live
+/// environment. It is solely for testing, educational, or demonstration purposes. Any interactions with this contract
+/// will not have real-world consequences or effects on blockchain networks. Please refrain from relying on the
+/// functionality of this contract for any production. 🚨
 use starknet::{ContractAddress};
 
 #[starknet::interface]
@@ -6,10 +9,10 @@ trait IErc20Mock<TContractState> {
     fn mint(ref self: TContractState, to: ContractAddress, amount: u256);
     fn approve(ref self: TContractState, spender: ContractAddress, amount: u256);
     fn transfer_from(
-        ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256
+        ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256,
     ) -> bool;
     fn transferFrom(
-        ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256
+        ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256,
     ) -> bool;
     fn balance_of(self: @TContractState, account: ContractAddress) -> u256;
     fn allowance(self: @TContractState, owner: ContractAddress, spender: ContractAddress) -> u256;
@@ -17,7 +20,9 @@ trait IErc20Mock<TContractState> {
 
 #[starknet::contract]
 mod Erc20Mock {
-    use starknet::{info::{get_caller_address}, ContractAddress, storage::Map};
+    use starknet::ContractAddress;
+    use starknet::info::get_caller_address;
+    use starknet::storage::Map;
 
     #[storage]
     struct Storage {
@@ -32,13 +37,13 @@ mod Erc20Mock {
         }
 
         fn transfer_from(
-            ref self: ContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256
+            ref self: ContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256,
         ) -> bool {
             self.transfer_from_internal(sender, recipient, amount)
         }
 
         fn transferFrom(
-            ref self: ContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256
+            ref self: ContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256,
         ) -> bool {
             self.transfer_from_internal(sender, recipient, amount)
         }
@@ -59,7 +64,7 @@ mod Erc20Mock {
     #[generate_trait]
     impl Private of PrivateTrait {
         fn transfer_from_internal(
-            ref self: ContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256
+            ref self: ContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256,
         ) -> bool {
             let caller = get_caller_address();
             let current_allowance = self.allowances.read((sender, caller));

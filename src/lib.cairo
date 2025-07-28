@@ -20,8 +20,8 @@ mod multisig {
 mod signer {
     mod eip191;
     mod signer_signature;
-    mod webauthn;
     mod siws;
+    mod webauthn;
 }
 
 mod signer_storage {
@@ -93,6 +93,6 @@ mod external_owners {
 }
 
 mod multiple_owners {
-    mod multiple_owners;
     mod interface;
+    mod multiple_owners;
 }

@@ -1,10 +1,4 @@
 #[cfg(test)]
-mod test_controller_account;
-#[cfg(test)]
-mod test_controller_account_escape;
-#[cfg(test)]
-mod test_controller_account_signatures;
-#[cfg(test)]
 mod test_asserts;
 // #[cfg(test)]
 // mod test_comp_multisig;
@@ -16,6 +10,12 @@ mod test_asserts;
 mod test_comp_signer_list;
 #[cfg(test)]
 mod test_comp_src5;
+#[cfg(test)]
+mod test_controller_account;
+#[cfg(test)]
+mod test_controller_account_escape;
+#[cfg(test)]
+mod test_controller_account_signatures;
 #[cfg(test)]
 mod test_eip191;
 #[cfg(test)]
