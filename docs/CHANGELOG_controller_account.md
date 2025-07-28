@@ -1,4 +1,4 @@
-# Argent Account Changelog
+# Controller Account Changelog
 
 # Version 0.4.0
 
@@ -106,8 +106,6 @@ First release using Cairo 2
 - Recovery changes: For extra safety now you need to specify the new signer when triggering the escape. Escapes will automatically expire after a week if not completed
 - Outside execution: A new feature to allows metatransactions by leveraging offchain signatures
 - This account can only declare Cairo 1 contracts, not allowed to declare Cairo 0 code
-
-More details here https://www.notion.so/argenthq/Starknet-Account-Cairo-1-Release-Notes-dd090b274a874dd4bc70f0da2b05b0f2
 
 # Older versions
 

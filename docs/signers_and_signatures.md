@@ -1,6 +1,6 @@
 # Multiple Signer Types
 
-Starting from argent [account](./argent-account.md) v0.4.0 and [multisig](./multisig.md) v0.2.0, the accounts will allow the use of other signatures types, besides the Starknet native one. We support the following:
+Starting from controller [account](./controller-account.md) v0.4.0 and [multisig](./multisig.md) v0.2.0, the accounts will allow the use of other signatures types, besides the Starknet native one. We support the following:
 
 - **Starknet**: native starknet key signature, it will be the most efficient in terms of gas usage
 - **Secp256k1**: Uses the curve used by Ethereum and other cryptocurrencies
@@ -49,7 +49,7 @@ struct SignerLinked {
 
 # Signatures
 
-**NOTE** Besides the format specified here, the argent account also supports concise signatures. See [Signatures](./argent_account.md#Signatures)
+**NOTE** Besides the format specified here, the controller account also supports concise signatures. See [Signatures](./controller_account.md#Signatures)
 
 Signatures are provided as an `Array<SignerSignature>`
 
