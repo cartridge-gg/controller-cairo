@@ -1,0 +1,45 @@
+name: test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+# Add concurrency group to cancel in-progress runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SCARB_VERSION: 2.11.1
+  SNFORGE_VERSION: 0.40.0
+
+jobs:
+  cairo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            cairo:
+              - '**/*.cairo'
+              - '**/*.toml'
+              - '**/*.lock'
+
+      - name: Setup Scarb
+        if: steps.changes.outputs.cairo == 'true'
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+
+      - name: Run tests
+        if: steps.changes.outputs.cairo == 'true'
+        run: scarb test
+
+      - name: Build contracts
+        if: steps.changes.outputs.cairo == 'true'
+        run: scarb build

@@ -1,0 +1,40 @@
+name: quality
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  SCARB_VERSION: 2.11.1
+
+jobs:
+  lint:
+    name: Code Quality (mirrors pre-commit hooks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup Scarb for Cairo formatting
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+
+      # Setup Node.js and prettier for documentation formatting
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install prettier
+        run: npm install -g prettier
+
+      # Make scripts executable
+      - name: Make scripts executable
+        run: chmod +x bin/*
+
+      # Run all linting checks (mirrors the pre-commit hooks exactly)
+      - name: Run all linting checks
+        run: make lint-check

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}Running Cairo linting...${NC}"
+
+# Check if scarb is available
+if ! command -v scarb &> /dev/null; then
+    echo -e "${RED}Error: scarb not found. Please install Scarb.${NC}"
+    exit 1
+fi
+
+# Parse arguments
+CHECK_ONLY=false
+if [[ "$1" == "--check" ]]; then
+    CHECK_ONLY=true
+fi
+
+# Format Cairo files
+if [ "$CHECK_ONLY" = true ]; then
+    echo -e "${BLUE}Checking Cairo formatting...${NC}"
+    scarb fmt --check
+else
+    echo -e "${BLUE}Formatting Cairo files...${NC}"
+    scarb fmt
+fi
+
+# Run Cairo build check
+echo -e "${BLUE}Running Cairo build check...${NC}"
+scarb build
+
+echo -e "${GREEN}✅ Cairo linting completed successfully!${NC}"

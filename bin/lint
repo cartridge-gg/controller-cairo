@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Default values
+CHECK_ONLY=false
+CAIRO_LINT=false
+PRETTIER_LINT=false
+FILES_SPECIFIED=false
+SPECIFIC_FILES=""
+
+# Function to show usage
+show_usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  --cairo         Run Cairo linting only (scarb fmt + build check)"
+    echo "  --prettier      Run prettier linting only (markdown/yaml)"
+    echo "  --all           Run all linting (default if no specific options)"
+    echo "  --check-only    Check formatting without applying changes"
+    echo "  --files FILE... Lint specific files only"
+    echo "  --help          Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0                     # Run all linting"
+    echo "  $0 --cairo             # Run only Cairo linting"
+    echo "  $0 --check-only        # Check all without formatting"
+    echo "  $0 --files src/lib.cairo  # Lint specific file"
+}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --cairo)
+            CAIRO_LINT=true
+            shift
+            ;;
+        --prettier)
+            PRETTIER_LINT=true
+            shift
+            ;;
+        --all)
+            CAIRO_LINT=true
+            PRETTIER_LINT=true
+            shift
+            ;;
+        --check-only)
+            CHECK_ONLY=true
+            shift
+            ;;
+        --files)
+            FILES_SPECIFIED=true
+            shift
+            while [[ $# -gt 0 && ! $1 =~ ^-- ]]; do
+                SPECIFIC_FILES="$SPECIFIC_FILES $1"
+                shift
+            done
+            ;;
+        --help)
+            show_usage
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Unknown option: $1${NC}"
+            show_usage
+            exit 1
+            ;;
+    esac
+done
+
+# If no specific linter is chosen, run all
+if [ "$CAIRO_LINT" = false ] && [ "$PRETTIER_LINT" = false ]; then
+    CAIRO_LINT=true
+    PRETTIER_LINT=true
+fi
+
+echo -e "${BLUE}Running linting checks...${NC}"
+
+# Function to run Cairo linting
+run_cairo_lint() {
+    if ! command -v scarb &> /dev/null; then
+        echo -e "${YELLOW}scarb not found. Skipping Cairo linting.${NC}"
+        return 0
+    fi
+    
+    echo -e "${BLUE}Running Cairo linting...${NC}"
+    
+    if [ "$FILES_SPECIFIED" = true ]; then
+        # Check if any specified files are Cairo files
+        CAIRO_FILES=$(echo "$SPECIFIC_FILES" | tr ' ' '\n' | grep '\.cairo$' || true)
+        if [ -z "$CAIRO_FILES" ]; then
+            return 0
+        fi
+    fi
+    
+    # Format Cairo files
+    if [ "$CHECK_ONLY" = true ]; then
+        echo -e "${BLUE}Checking Cairo formatting...${NC}"
+        scarb fmt --check
+    else
+        echo -e "${BLUE}Formatting Cairo files...${NC}"
+        scarb fmt
+    fi
+    
+    # Run Cairo build check
+    echo -e "${BLUE}Running Cairo build check...${NC}"
+    scarb build
+}
+
+# Function to run prettier linting
+run_prettier_lint() {
+    if ! command -v prettier &> /dev/null; then
+        echo -e "${YELLOW}prettier not found. Skipping documentation linting.${NC}"
+        return 0
+    fi
+    
+    echo -e "${BLUE}Running prettier linting...${NC}"
+    
+    if [ "$FILES_SPECIFIED" = true ]; then
+        # Lint specific documentation files
+        DOC_FILES=$(echo "$SPECIFIC_FILES" | tr ' ' '\n' | grep -E '\.(md|yml|yaml|json)$' | grep -v CLAUDE.md || true)
+        if [ -n "$DOC_FILES" ]; then
+            if [ "$CHECK_ONLY" = true ]; then
+                echo "$DOC_FILES" | xargs prettier --check
+            else
+                echo "$DOC_FILES" | xargs prettier --write
+            fi
+        fi
+    else
+        # Lint all documentation files
+        if [ "$CHECK_ONLY" = true ]; then
+            prettier --check "**/*.{md,yml,yaml,json}" --ignore-path .prettierignore 2>/dev/null || true
+        else
+            prettier --write "**/*.{md,yml,yaml,json}" --ignore-path .prettierignore 2>/dev/null || true
+        fi
+    fi
+}
+
+# Run the selected linters
+EXIT_CODE=0
+
+if [ "$CAIRO_LINT" = true ]; then
+    if ! run_cairo_lint; then
+        EXIT_CODE=1
+    fi
+fi
+
+if [ "$PRETTIER_LINT" = true ]; then
+    if ! run_prettier_lint; then
+        EXIT_CODE=1
+    fi
+fi
+
+if [ $EXIT_CODE -eq 0 ]; then
+    echo -e "${GREEN}✅ All linting checks passed!${NC}"
+else
+    echo -e "${RED}❌ Some linting checks failed.${NC}"
+fi
+
+exit $EXIT_CODE

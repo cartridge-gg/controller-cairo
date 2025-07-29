@@ -1,0 +1,20 @@
+# Build artifacts
+target/
+*.toml.orig
+
+# Generated files
+Scarb.lock
+
+# IDE files
+.vscode/
+.idea/
+
+# Git files
+.git/
+
+# CI specific files
+CLAUDE.md
+
+# Documentation that shouldn't be formatted
+audit/
+docs/

@@ -11,7 +11,7 @@ jobs:
 
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1.3.2
-          
+
       - name: Install project
         run: yarn install --frozen-lockfile
 
@@ -31,7 +31,7 @@ jobs:
 
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1.3.2
-          
+
       - name: Install project
         run: yarn install --frozen-lockfile
 

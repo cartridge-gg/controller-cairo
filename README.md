@@ -27,6 +27,7 @@ See [Controller Account](./docs/controller_account.md) for detailed specificatio
 We recommend installing scarb through ASDF. Please refer to [these instructions](https://docs.swmansion.com/scarb/download.html#install-via-asdf).
 
 Thanks to the [.tool-versions file](./.tool-versions), you don't need to install specific versions. The correct versions will be automatically downloaded:
+
 - Scarb 2.11.1
 - Starknet Foundry 0.40.0
 
@@ -59,7 +60,7 @@ scarb run deploy-account
 ## Project Structure
 
 - `src/presets/` - Main Controller Account implementation
-- `src/account/`, `src/multisig/` - Core account interfaces and logic  
+- `src/account/`, `src/multisig/` - Core account interfaces and logic
 - `src/signer/` - Multiple signature type support (Starknet, Passkeys, EIP191, SIWS)
 - `src/session/` - Session-based authentication
 - `src/multiple_owners/` - Multi-owner management
