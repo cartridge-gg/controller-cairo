@@ -1,0 +1,44 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Scarb
+      uses: software-mansion/setup-scarb@v1
+      with:
+        scarb-version: "2.8.4"
+
+    - name: Setup Node.js for Prettier
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install Prettier
+      run: npm install -g prettier
+
+    - name: Check Cairo formatting
+      run: scarb fmt --check
+
+    - name: Check documentation formatting
+      run: |
+        # Find and check formatting for documentation files, excluding CLAUDE.md
+        find . -name "*.md" -not -name "CLAUDE.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" | \
+        head -20 | \
+        xargs prettier --check || (echo "Some files need formatting. Run 'prettier --write <files>' to fix." && exit 1)
+
+    - name: Build Cairo contracts
+      run: scarb build
+
+    - name: Run Cairo tests
+      run: scarb test
