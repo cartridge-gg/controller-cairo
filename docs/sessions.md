@@ -129,7 +129,3 @@ struct Session {
   }
 }
 ```
-
-### Examples
-
-There are some examples in typescript about how to use this feature [here](../lib/session/) and [here](../tests-integration/sessionAccount.test.ts)
