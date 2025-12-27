@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Skills
+
+This repository includes specialized skills in `.claude/skills/`:
+
+- **create-pr** - Guidelines for creating well-formed pull requests
+- **update-pr** - How to update PRs based on review feedback
+- **write-cairo** - Cairo coding patterns and project conventions
+- **write-tests** - Testing with Starknet Foundry
+- **review-code** - Security checklist for Cairo smart contracts
+
 ## Commands
 
 ### Testing

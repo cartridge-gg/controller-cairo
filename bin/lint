@@ -137,9 +137,9 @@ run_prettier_lint() {
     else
         # Lint all documentation files
         if [ "$CHECK_ONLY" = true ]; then
-            prettier --check "**/*.{md,yml,yaml,json}" --ignore-path .prettierignore 2>/dev/null || true
+            prettier --check "**/*.{md,yml,yaml,json}" --ignore-path .prettierignore
         else
-            prettier --write "**/*.{md,yml,yaml,json}" --ignore-path .prettierignore 2>/dev/null || true
+            prettier --write "**/*.{md,yml,yaml,json}" --ignore-path .prettierignore
         fi
     fi
 }

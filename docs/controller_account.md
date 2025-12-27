@@ -72,4 +72,4 @@ See [Sessions](./sessions.md)
 
 ## Upgrades
 
-See [Upgrades](./argen_account_upgrades.md)
+See [Upgrades](./controller_account_upgrades.md)
